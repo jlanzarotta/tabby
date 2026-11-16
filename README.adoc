@@ -1,0 +1,367 @@
+= Tabby
+:toc: left
+:toclevels: 3
+:icons: font
+:source-highlighter: rouge
+
+Fuzzy tab completion for the commands you actually use.
+
+image::assets/demo.gif[Tabby preview,500]
+
+Tabby learns the commands you run successfully and brings them back with a few keystrokes and the Tab key. Type a
+short query such as `gco`, press Tab, and Tabby expands it to the best matching command, for example
+`git checkout main`. Press Tab again to cycle through the other matches. When nothing matches, normal shell completion
+takes over.
+
+== Features
+
+* Fuzzy matching on word starts, so `dcu` finds `docker compose up -d`.
+* Ranking by frecency: how often and how recently you ran a command.
+* Directory-aware ranking: commands you ran in the current directory, or elsewhere in the same git repository, rank
+  above commands you ran somewhere else.
+* Pinning: pinned commands never expire and do not lose rank as they age.
+* Only successful commands are recorded. Failed commands are never stored.
+* Exclusion patterns that keep secrets and noise out of the store, with a large built-in set.
+* Integration for Zsh, Bash, and PowerShell.
+* A single local SQLite database. Nothing leaves your machine.
+
+== Install
+
+From the repository root:
+
+[source,sh]
+----
+go install ./cmd/tabby
+----
+
+Make sure `$(go env GOPATH)/bin` is in your `PATH`.
+
+== Shell setup
+
+=== Zsh
+
+Add to `~/.zshrc`:
+
+[source,zsh]
+----
+eval "$(tabby init zsh)"
+----
+
+=== Bash
+
+Bash 4.4 or newer is required.
+
+Add to `~/.bashrc`:
+
+[source,bash]
+----
+eval "$(tabby init bash)"
+----
+
+=== PowerShell
+
+PowerShell 5.1 or newer and PSReadLine 2.0 or newer are required. PSReadLine is installed by default.
+
+Add to your PowerShell profile:
+
+[source,powershell]
+----
+Invoke-Expression (& { (tabby init powershell | Out-String) })
+----
+
+=== Key bindings
+
+[cols="1,3"]
+|===
+|Key |Action
+
+|Tab
+|Expand the query to the best match. Press again to move to the next match.
+
+|Shift+Tab
+|Expand to the last match, or move to the previous match.
+|===
+
+Tabby only completes when the cursor is at the end of the line. Otherwise, and whenever there is no match, the key
+falls back to the shell's normal completion.
+
+== How it works
+
+=== Recording
+
+After each command finishes, the shell integration checks its exit status. When the command succeeded, the
+integration runs `tabby add` in the background. Tabby then stores the command along with:
+
+* how many times it has been used and when it was last used, and
+* the directory it ran in and the root of the git repository around that directory, if there is one.
+
+=== Matching
+
+* Queries are case-insensitive.
+* The characters of the query must appear in the command in order, and the first one must start a word. For example,
+  `gco` matches `git checkout main`, and `bdr` does not match `bun run dev`.
+* A query must be at least two characters long, must not contain whitespace, and must not look like a path. Paths
+  such as `./build`, `~/src`, or `C:\temp` are left to the shell.
+* At most 50 matches are returned.
+
+=== Ranking
+
+Matches are ordered by how well the text matches first:
+
+. matches that land on more word starts,
+. then matches with more consecutive characters,
+. then matches with fewer gaps.
+
+Ties are broken by a score. The base score is the use count multiplied by a recency weight:
+
+[cols="1,1"]
+|===
+|Last used |Weight
+
+|Within the last hour |4
+|Within the last day |2
+|Within the last week |0.5
+|Longer ago |0.25
+|===
+
+Tabby then adds the command's recent use in the current location:
+
+* Use in the current directory counts 4 times: once for the directory and once for the repository.
+* Use elsewhere in the same git repository counts once.
+
+Each of these is also a use count multiplied by the recency weight above. So a command you run often in this
+repository wins a tie against one you run often somewhere else.
+
+A pinned command never gets a recency weight lower than 2, so it ranks as if it had been used within the last day.
+
+NOTE: Text match quality always comes first. A better fuzzy match from anywhere beats a weaker match from the current
+directory. Directory use and pinning decide the order among equally good matches.
+
+==== How directories are compared
+
+* The repository root is the closest directory at or above the current one that contains a `.git` entry.
+* A repository at your home directory is ignored, so a dotfiles repository there does not make every directory count
+  as one project.
+* On Windows, paths are compared case-insensitively.
+* Commands recorded before directory tracking was added have no directory data. The directory boost builds up as you
+  use the shell.
+
+=== What is not stored
+
+* Commands that did not finish successfully
+* Commands of five characters or fewer
+* Commands that run `tabby` itself, or that contain control characters
+* Commands that match an exclusion pattern
+* In Zsh and PowerShell, commands that start with a space. Bash follows `HISTCONTROL` instead, so set
+  `HISTCONTROL=ignorespace` (or `ignoreboth`) to get the same behavior.
+* In PowerShell, commands that the PSReadLine `AddToHistoryHandler` keeps out of the history file. By default, that
+  handler skips lines that look like they contain secrets.
+
+=== Retention
+
+Commands that have not been used in the last month are deleted, unless they are pinned. Directory usage older than a
+month is deleted too, including for pinned commands. Cleanup runs each time a command is recorded.
+
+== Commands
+
+=== Shell integration
+
+==== `tabby init <shell>`
+
+Print the integration script for `zsh`, `bash`, or `powershell`. See <<Shell setup>>.
+
+=== Command history
+
+==== `tabby add "<command>"`
+
+Record a run of a command, as if it had just finished successfully in the current directory. The same rules apply as
+for automatic recording, so a command that is too short or excluded is silently ignored.
+
+==== `tabby remove "<command>"`
+
+Delete a stored command, including its directory usage and its pin.
+
+==== `tabby query "<query>"`
+
+Print the matching commands in ranked order, one per line, using the current directory for ranking. The shell
+integration calls this when you press Tab.
+
+==== `tabby list`
+
+List stored commands with their last-used time and score, highest score first. Pinned commands are marked
+`[pinned]`. The scores shown here do not include directory use.
+
+[cols="1,3"]
+|===
+|Option |Description
+
+|`--pinned`
+|List only pinned commands.
+|===
+
+==== `tabby pin "<command>"`
+
+Pin a command so that it never expires. If the command is not stored yet, it is added. Pinning is refused for a
+command that matches an exclusion pattern.
+
+Pinning is meant for commands you run rarely but do not want to retype, such as a release or certificate renewal
+command.
+
+==== `tabby unpin "<command>"`
+
+Unpin a command so that it expires normally again. It is an error to unpin a command that is not pinned.
+
+TIP: If an unpinned command has not been used in the last month, it is deleted the next time any command is recorded.
+
+=== Exclusions
+
+Exclusions are case-insensitive glob patterns, not regular expressions. They support `*` (any text), `?` (any single
+character), and `[...]` (any character in the set, or not in it when the set starts with `^`). A pattern must match the whole command, so most patterns start
+and end with `*`.
+
+==== `tabby exclude add "<pattern>"`
+
+Add an exclusion and delete every stored command that matches it, including pinned commands. Tabby prints how many
+commands were deleted.
+
+[cols="1,3"]
+|===
+|Option |Description
+
+|`--force`
+|Allow a pattern that matches every command, such as `*`. Without it, such a pattern is refused, because it would
+delete all history.
+|===
+
+==== `tabby exclude remove "<pattern>"`
+
+Remove an exclusion. Commands it kept out in the past are not restored.
+
+==== `tabby exclude list`
+
+List the exclusion patterns with the time each was added, newest first.
+
+==== Built-in exclusions
+
+The built-in exclusions cover:
+
+* `cd *` and `ls *`
+* names and options that usually carry secrets, such as `API_KEY`, `--api-key`, `*_TOKEN`, `token=`, `PASSWORD`,
+  `passphrase`, `--secret`, and `private-key`
+* `Authorization:` headers, credentials in URLs (`https://user:pass@host`), `curl -u`, `sshpass`, and `-p` password
+  options for MySQL and MariaDB
+* SQL Server tools (`sqlcmd -P`, `bcp`, `sqlpackage`), `sqlplus`, `mongosh`, and connection strings with `Pwd=`
+* `redis-cli -a` and `valkey-cli -a`
+* registry and cluster logins with `-p` for Docker, Podman, Buildah, Skopeo, Helm, `oc`, and `az`
+* container and Kubernetes secrets (`secret create`, `--from-literal`)
+* Vault and OpenBao logins and writes, `rabbitmqctl add_user`, and `net use /user:`
+* well-known token prefixes such as `ghp_`, `gho_`, `github_pat_`, `glpat-`, `xoxb-`, `xoxp-`, and `sk_live_`
+* PEM blocks (`-----BEGIN`)
+
+Run `tabby exclude list` to see the full set.
+
+=== Other commands
+
+==== `tabby path`
+
+Print the absolute path to the SQLite database. See <<Storage>>.
+
+==== `tabby prepare`
+
+Create the database and apply any pending schema migrations, then exit. Every other command that uses the database
+does this too, so you only need it to set up the database ahead of time.
+
+==== `tabby --version`
+
+Print the version, build date, and license. `tabby -version` also works.
+
+== Environment variables
+
+[cols="1,3"]
+|===
+|Variable |Description
+
+|`XDG_CONFIG_HOME`
+|When set to an absolute path, the database is stored in `$XDG_CONFIG_HOME/tabby`, on every platform. Relative values
+are ignored.
+
+|`TABBY_DIR`
+|The directory to use for directory-aware ranking. When it is not set, Tabby uses its working directory. The
+PowerShell integration sets it, because `Set-Location` does not change the working directory of the PowerShell
+process. The Zsh integration sets it to the directory the command started in.
+
+|`TABBY_INPUT`
+|Used by the PowerShell integration to pass the command or query text, with the hidden `--from-env` option on `add`
+and `query`. PowerShell 5.1 does not escape embedded quotes in arguments to native commands, so the text goes through
+the environment instead.
+|===
+
+== Storage
+
+The database is a single SQLite file named `tabby.db`.
+
+[cols="1,2"]
+|===
+|Platform |Location
+
+|Any, with `XDG_CONFIG_HOME` set
+|`$XDG_CONFIG_HOME/tabby/tabby.db`
+
+|Windows
+|`%AppData%\tabby\tabby.db`
+
+|macOS
+|`~/Library/Application Support/tabby/tabby.db`
+
+|Linux
+|`~/.config/tabby/tabby.db`
+|===
+
+On Linux and macOS, the directory is created with mode `0700` and the database files with mode `0600`, so only you
+can read them. On Windows, Tabby relies on the permissions of your user profile.
+
+The schema is upgraded automatically when a newer Tabby opens the database. An older Tabby refuses to open a database
+created by a newer one, and asks you to upgrade.
+
+== Cautions
+
+[CAUTION]
+====
+*The database is not encrypted.* Every stored command is kept in plain text, together with the directories it ran
+in. Anyone who can read your user configuration directory, or a backup of it, can read your command history.
+====
+
+[CAUTION]
+====
+*The built-in exclusions are not exhaustive.* They catch common ways that secrets appear on a command line, but not
+all of them. Add your own patterns for anything sensitive, and prefer reading secrets from files or environment
+variables over typing them on the command line.
+====
+
+[WARNING]
+====
+*Hiding a command differs by shell.* In Zsh and PowerShell, starting a command with a space keeps it out of Tabby.
+In Bash, this only works when `HISTCONTROL` includes `ignorespace` or `ignoreboth`.
+====
+
+[WARNING]
+====
+*Exclusions delete history.* Adding an exclusion permanently deletes every stored command it matches, including
+pinned commands. Removing the exclusion later does not bring them back.
+====
+
+[NOTE]
+====
+*Directory paths are stored too.* Directory-aware ranking records the full path of each directory you run commands
+in. Folder names can reveal client or project names.
+====
+
+[NOTE]
+====
+*Tab is taken over.* Tabby binds Tab and Shift+Tab. In Bash, Tab is bound to `menu-complete`, which cycles through
+completions instead of listing them.
+====
+
+== License
+
+Tabby is licensed under the BSD 3-Clause License. See link:LICENSE[LICENSE].

@@ -1,0 +1,66 @@
+version: 2
+
+project_name: tabby
+
+env_files:
+  # GoReleaser requires an API token with the 'repo' scope selected to deploy
+  # the artifacts to GitHub. You can create one here
+  # https://github.com/settings/tokens/new.
+  github_token: ./github_token
+
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # Download all the modules in the dependency graph.
+    - go mod download
+    # you may remove this if you don't need go generate
+    - go generate ./...
+
+release:
+  prerelease: auto
+
+builds:
+  - main:
+      ./cmd/tabby
+    binary:
+      khronos
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+
+homebrew_casks:
+  - name: tabby
+    homepage: https://github.com/jlanzarotta/tabby
+    description: Fuzzy tab auto completer for successfully run commands
+    binaries: [tabby]
+    skip_upload: auto
+    repository:
+      owner: waradu
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_msg_template: "chore: update tabby to {{ .Tag }}"
+    caveats: |
+      To enable Tabby in Zsh, add to ~/.zshrc:
+        eval "$(tabby init zsh)"
+
+      For Bash 4.4 or newer, add to ~/.bashrc:
+        eval "$(tabby init bash)"
+
+      For PowerShell 5.1 or newer with PSReadLine 2.0 or newer, add to $PROFILE:
+        Invoke-Expression (& { (tabby init powershell | Out-String) })
+
+      Restart your shell after installing or upgrading to load the shell integration.
