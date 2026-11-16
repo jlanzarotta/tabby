@@ -6,8 +6,6 @@
 
 Fuzzy tab completion for the commands you actually use.
 
-image::assets/demo.gif[Tabby preview,500]
-
 Tabby learns the commands you run successfully and brings them back with a few keystrokes and the Tab key. Type a
 short query such as `gco`, press Tab, and Tabby expands it to the best matching command, for example
 `git checkout main`. Press Tab again to cycle through the other matches. When nothing matches, normal shell completion
