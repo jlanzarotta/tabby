@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.26">
+<meta name="generator" content="Asciidoctor 2.0.20">
 <title>Tabby</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -116,6 +116,7 @@ h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title str
 :not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
 pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
 pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
+pre>code{display:block}
 pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
 em em{font-style:normal}
 strong strong{font-weight:400}
@@ -139,7 +140,7 @@ p a>code:hover{color:rgba(0,0,0,.9)}
 #content::before{content:none}
 #header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
 #header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
-#header>h1:only-child{border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
 #header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
 #header .details span:first-child{margin-left:-.125em}
 #header .details span.email a{color:rgba(0,0,0,.85)}
@@ -161,7 +162,6 @@ p a>code:hover{color:rgba(0,0,0,.9)}
 #toctitle{color:#7a2518;font-size:1.2em}
 @media screen and (min-width:768px){#toctitle{font-size:1.375em}
 body.toc2{padding-left:15em;padding-right:0}
-body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
 #toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
 #toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
 #toc.toc2>ul{font-size:.9em;margin-bottom:0}
@@ -218,7 +218,6 @@ table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
 .literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
 .literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
 .listingblock>.content{position:relative}
-.listingblock pre>code{display:block}
 .listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
 .listingblock:hover code[data-lang]::before{display:block}
 .listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
@@ -328,7 +327,7 @@ a.image{text-decoration:none;display:inline-block}
 a.image object{pointer-events:none}
 sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
 sup.footnote a,sup.footnoteref a{text-decoration:none}
-sup.footnote a:active,sup.footnoteref a:active,#footnotes .footnote a:first-of-type:active{text-decoration:underline}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
 #footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
 #footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
 #footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
@@ -656,67 +655,72 @@ pre.rouge {
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_features">Features</a></li>
-<li><a href="#_install">Install</a></li>
-<li><a href="#_shell_setup">Shell setup</a>
+<li><a href="#features">Features</a></li>
+<li><a href="#install">Install</a></li>
+<li><a href="#shell-setup">Shell setup</a>
 <ul class="sectlevel2">
-<li><a href="#_zsh">Zsh</a></li>
-<li><a href="#_bash">Bash</a></li>
-<li><a href="#_powershell">PowerShell</a></li>
-<li><a href="#_key_bindings">Key bindings</a></li>
+<li><a href="#zsh">Zsh</a></li>
+<li><a href="#bash">Bash</a></li>
+<li><a href="#powershell">PowerShell</a></li>
+<li><a href="#key-bindings">Key bindings</a></li>
 </ul>
 </li>
-<li><a href="#_how_it_works">How it works</a>
+<li><a href="#how-it-works">How it works</a>
 <ul class="sectlevel2">
-<li><a href="#_recording">Recording</a></li>
-<li><a href="#_matching">Matching</a></li>
-<li><a href="#_ranking">Ranking</a>
+<li><a href="#recording">Recording</a></li>
+<li><a href="#matching">Matching</a></li>
+<li><a href="#ranking">Ranking</a>
 <ul class="sectlevel3">
-<li><a href="#_how_directories_are_compared">How directories are compared</a></li>
+<li><a href="#how-directories-are-compared">How directories are compared</a></li>
 </ul>
 </li>
-<li><a href="#_what_is_not_stored">What is not stored</a></li>
-<li><a href="#_retention">Retention</a></li>
+<li><a href="#learned-picks">Learned picks</a></li>
+<li><a href="#next-command-prediction">Next-command prediction</a></li>
+<li><a href="#what-is-not-stored">What is not stored</a></li>
+<li><a href="#retention">Retention</a></li>
 </ul>
 </li>
-<li><a href="#_commands">Commands</a>
+<li><a href="#commands">Commands</a>
 <ul class="sectlevel2">
-<li><a href="#_shell_integration">Shell integration</a>
+<li><a href="#shell-integration">Shell integration</a>
 <ul class="sectlevel3">
-<li><a href="#_tabby_init_shell"><code>tabby init &lt;shell&gt;</code></a></li>
+<li><a href="#tabby-init-shell"><code>tabby init &lt;shell&gt;</code></a></li>
 </ul>
 </li>
-<li><a href="#_command_history">Command history</a>
+<li><a href="#command-history">Command history</a>
 <ul class="sectlevel3">
-<li><a href="#_tabby_add_command"><code>tabby add "&lt;command&gt;"</code></a></li>
-<li><a href="#_tabby_remove_command"><code>tabby remove "&lt;command&gt;"</code></a></li>
-<li><a href="#_tabby_query_query"><code>tabby query "&lt;query&gt;"</code></a></li>
-<li><a href="#_tabby_list"><code>tabby list</code></a></li>
-<li><a href="#_tabby_pin_command"><code>tabby pin "&lt;command&gt;"</code></a></li>
-<li><a href="#_tabby_unpin_command"><code>tabby unpin "&lt;command&gt;"</code></a></li>
+<li><a href="#tabby-add-command"><code>tabby add "&lt;command&gt;"</code></a></li>
+<li><a href="#tabby-remove-command"><code>tabby remove "&lt;command&gt;"</code></a></li>
+<li><a href="#tabby-query-query"><code>tabby query "&lt;query&gt;"</code></a></li>
+<li><a href="#tabby-next-command"><code>tabby next "&lt;command&gt;"</code></a></li>
+<li><a href="#tabby-list"><code>tabby list</code></a></li>
+<li><a href="#tabby-forget-query"><code>tabby forget [query]</code></a></li>
+<li><a href="#tabby-stats"><code>tabby stats</code></a></li>
+<li><a href="#tabby-pin-command"><code>tabby pin "&lt;command&gt;"</code></a></li>
+<li><a href="#tabby-unpin-command"><code>tabby unpin "&lt;command&gt;"</code></a></li>
 </ul>
 </li>
-<li><a href="#_exclusions">Exclusions</a>
+<li><a href="#exclusions">Exclusions</a>
 <ul class="sectlevel3">
-<li><a href="#_tabby_exclude_add_pattern"><code>tabby exclude add "&lt;pattern&gt;"</code></a></li>
-<li><a href="#_tabby_exclude_remove_pattern"><code>tabby exclude remove "&lt;pattern&gt;"</code></a></li>
-<li><a href="#_tabby_exclude_list"><code>tabby exclude list</code></a></li>
-<li><a href="#_built_in_exclusions">Built-in exclusions</a></li>
+<li><a href="#tabby-exclude-add-pattern"><code>tabby exclude add "&lt;pattern&gt;"</code></a></li>
+<li><a href="#tabby-exclude-remove-pattern"><code>tabby exclude remove "&lt;pattern&gt;"</code></a></li>
+<li><a href="#tabby-exclude-list"><code>tabby exclude list</code></a></li>
+<li><a href="#built-in-exclusions">Built-in exclusions</a></li>
 </ul>
 </li>
-<li><a href="#_other_commands">Other commands</a>
+<li><a href="#other-commands">Other commands</a>
 <ul class="sectlevel3">
-<li><a href="#_tabby_path"><code>tabby path</code></a></li>
-<li><a href="#_tabby_prepare"><code>tabby prepare</code></a></li>
-<li><a href="#_tabby_version"><code>tabby --version</code></a></li>
+<li><a href="#tabby-path"><code>tabby path</code></a></li>
+<li><a href="#tabby-prepare"><code>tabby prepare</code></a></li>
+<li><a href="#tabby-version"><code>tabby --version</code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#_environment_variables">Environment variables</a></li>
-<li><a href="#_storage">Storage</a></li>
-<li><a href="#_cautions">Cautions</a></li>
-<li><a href="#_license">License</a></li>
+<li><a href="#environment-variables">Environment variables</a></li>
+<li><a href="#storage">Storage</a></li>
+<li><a href="#cautions">Cautions</a></li>
+<li><a href="#license">License</a></li>
 </ul>
 </div>
 </div>
@@ -735,7 +739,7 @@ takes over.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_features">Features</h2>
+<h2 id="features"><a class="anchor" href="#features"></a>Features</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -751,6 +755,16 @@ above commands you ran somewhere else.</p>
 </li>
 <li>
 <p>Pinning: pinned commands never expire and do not lose rank as they age.</p>
+</li>
+<li>
+<p>Learning from your picks: when you cycle to a command and run it, Tabby offers it first the next time you type the
+same query.</p>
+</li>
+<li>
+<p>Next-command prediction: press Tab on an empty prompt to get the commands that usually follow the one you just ran.</p>
+</li>
+<li>
+<p>Usage statistics with alias suggestions for the long commands you run most.</p>
 </li>
 <li>
 <p>Only successful commands are recorded. Failed commands are never stored.</p>
@@ -769,7 +783,7 @@ above commands you ran somewhere else.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_install">Install</h2>
+<h2 id="install"><a class="anchor" href="#install"></a>Install</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>From the repository root:</p>
@@ -785,10 +799,10 @@ above commands you ran somewhere else.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_shell_setup">Shell setup</h2>
+<h2 id="shell-setup"><a class="anchor" href="#shell-setup"></a>Shell setup</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_zsh">Zsh</h3>
+<h3 id="zsh"><a class="anchor" href="#zsh"></a>Zsh</h3>
 <div class="paragraph">
 <p>Add to <code>~/.zshrc</code>:</p>
 </div>
@@ -799,7 +813,7 @@ above commands you ran somewhere else.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bash">Bash</h3>
+<h3 id="bash"><a class="anchor" href="#bash"></a>Bash</h3>
 <div class="paragraph">
 <p>Bash 4.4 or newer is required.</p>
 </div>
@@ -813,7 +827,7 @@ above commands you ran somewhere else.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_powershell">PowerShell</h3>
+<h3 id="powershell"><a class="anchor" href="#powershell"></a>PowerShell</h3>
 <div class="paragraph">
 <p>PowerShell 5.1 or newer and PSReadLine 2.0 or newer are required. PSReadLine is installed by default.</p>
 </div>
@@ -827,7 +841,7 @@ above commands you ran somewhere else.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_key_bindings">Key bindings</h3>
+<h3 id="key-bindings"><a class="anchor" href="#key-bindings"></a>Key bindings</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -848,6 +862,10 @@ above commands you ran somewhere else.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Shift+Tab</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Expand to the last match, or move to the previous match.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tab on an empty prompt</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Insert the command that most often follows the last command you ran. Press again to move to the next prediction.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -858,10 +876,10 @@ falls back to the shell&#8217;s normal completion.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_how_it_works">How it works</h2>
+<h2 id="how-it-works"><a class="anchor" href="#how-it-works"></a>How it works</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_recording">Recording</h3>
+<h3 id="recording"><a class="anchor" href="#recording"></a>Recording</h3>
 <div class="paragraph">
 <p>After each command finishes, the shell integration checks its exit status. When the command succeeded, the
 integration runs <code>tabby add</code> in the background. Tabby then stores the command along with:</p>
@@ -872,13 +890,19 @@ integration runs <code>tabby add</code> in the background. Tabby then stores the
 <p>how many times it has been used and when it was last used, and</p>
 </li>
 <li>
-<p>the directory it ran in and the root of the git repository around that directory, if there is one.</p>
+<p>the directory it ran in and the root of the git repository around that directory, if there is one, and</p>
+</li>
+<li>
+<p>the query, when the command was inserted by Tabby and you ran it without changing it. See <a href="#learned-picks">Learned picks</a>.</p>
+</li>
+<li>
+<p>the command you ran just before it in the same shell, if it was stored. See <a href="#next-command-prediction">Next-command prediction</a>.</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_matching">Matching</h3>
+<h3 id="matching"><a class="anchor" href="#matching"></a>Matching</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -899,9 +923,10 @@ such as <code>./build</code>, <code>~/src</code>, or <code>C:\temp</code> are le
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ranking">Ranking</h3>
+<h3 id="ranking"><a class="anchor" href="#ranking"></a>Ranking</h3>
 <div class="paragraph">
-<p>Matches are ordered by how well the text matches first:</p>
+<p>Commands you have picked for the exact same query come first. See <a href="#learned-picks">Learned picks</a>. All other matches are ordered
+by how well the text matches:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -976,14 +1001,14 @@ repository wins a tie against one you run often somewhere else.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Text match quality always comes first. A better fuzzy match from anywhere beats a weaker match from the current
-directory. Directory use and pinning decide the order among equally good matches.
+Apart from learned picks, text match quality always comes first. A better fuzzy match from anywhere beats a
+weaker match from the current directory. Directory use and pinning decide the order among equally good matches.
 </td>
 </tr>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_how_directories_are_compared">How directories are compared</h4>
+<h4 id="how-directories-are-compared"><a class="anchor" href="#how-directories-are-compared"></a>How directories are compared</h4>
 <div class="ulist">
 <ul>
 <li>
@@ -1005,7 +1030,80 @@ use the shell.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_what_is_not_stored">What is not stored</h3>
+<h3 id="learned-picks"><a class="anchor" href="#learned-picks"></a>Learned picks</h3>
+<div class="paragraph">
+<p>When you press Tab, cycle to a command, and run it exactly as Tabby inserted it, Tabby remembers that you picked that
+command for that query. The next time you type the same query, the picked command is offered first. This fixes the
+cases where the fuzzy ranking puts the command you want further down the list, and it needs no setup.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Picks are tied to the exact query, ignoring case. A pick for <code>dcu</code> does not affect <code>dc</code> or <code>dcud</code>.</p>
+</li>
+<li>
+<p>When several commands have been picked for the same query, they are ordered by how often and how recently you picked
+them, using the same recency weights as above. They all come before commands that were never picked.</p>
+</li>
+<li>
+<p>Picks do not depend on the directory. A command picked in one repository is offered first for that query everywhere.</p>
+</li>
+<li>
+<p>A pick is only recorded when the command succeeds and you did not edit the line. Accepting the first match also
+counts, which keeps it first.</p>
+</li>
+<li>
+<p>Picks expire after a month without use, and are deleted with their command.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If Tabby learned the wrong command, run <code>tabby forget &lt;query&gt;</code> to start over for that query.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="next-command-prediction"><a class="anchor" href="#next-command-prediction"></a>Next-command prediction</h3>
+<div class="paragraph">
+<p>Each shell remembers the last command you ran successfully. When you run the next one, Tabby records that it followed
+the previous one. Press Tab on an empty prompt, and Tabby inserts the command that most often follows the last command
+you ran, for example <code>git commit</code> right after <code>git add .</code>, or <code>podman push</code> right after <code>podman build</code>. Press Tab again
+to cycle through the other predictions.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Predictions are ordered by how often and how recently that command followed the previous one, using the same recency
+weights as above. Ties go to the command with the higher overall score.</p>
+</li>
+<li>
+<p>Each shell tracks its own previous command, so commands run in two terminals at once do not mix. A new shell has no
+previous command until you run one.</p>
+</li>
+<li>
+<p>A failed command breaks the chain: the next command is not recorded as following anything.</p>
+</li>
+<li>
+<p>A command that is not stored, because it is too short, hidden, or excluded, also breaks the chain. For example,
+nothing is learned across a <code>cd</code>, since <code>cd *</code> is excluded by default.</p>
+</li>
+<li>
+<p>Running the same command twice in a row is not recorded, because up-arrow already covers that.</p>
+</li>
+<li>
+<p>When there is no previous command or no prediction for it, Tab on an empty prompt falls back to normal shell
+completion.</p>
+</li>
+<li>
+<p>Follow-ups expire after a month without use, and are deleted with either of their commands.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To see the predictions without the shell, run <code>tabby next "&lt;command&gt;"</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="what-is-not-stored"><a class="anchor" href="#what-is-not-stored"></a>What is not stored</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -1032,50 +1130,57 @@ handler skips lines that look like they contain secrets.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_retention">Retention</h3>
+<h3 id="retention"><a class="anchor" href="#retention"></a>Retention</h3>
 <div class="paragraph">
-<p>Commands that have not been used in the last month are deleted, unless they are pinned. Directory usage older than a
-month is deleted too, including for pinned commands. Cleanup runs each time a command is recorded.</p>
+<p>Commands that have not been used in the last month are deleted, unless they are pinned. Directory usage, learned
+picks, and follow-ups older than a month are deleted too, including for pinned commands. Cleanup runs each time a command is recorded.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_commands">Commands</h2>
+<h2 id="commands"><a class="anchor" href="#commands"></a>Commands</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_shell_integration">Shell integration</h3>
+<h3 id="shell-integration"><a class="anchor" href="#shell-integration"></a>Shell integration</h3>
 <div class="sect3">
-<h4 id="_tabby_init_shell"><code>tabby init &lt;shell&gt;</code></h4>
+<h4 id="tabby-init-shell"><a class="anchor" href="#tabby-init-shell"></a><code>tabby init &lt;shell&gt;</code></h4>
 <div class="paragraph">
-<p>Print the integration script for <code>zsh</code>, <code>bash</code>, or <code>powershell</code>. See <a href="#_shell_setup">Shell setup</a>.</p>
+<p>Print the integration script for <code>zsh</code>, <code>bash</code>, or <code>powershell</code>. See <a href="#shell-setup">Shell setup</a>.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_command_history">Command history</h3>
+<h3 id="command-history"><a class="anchor" href="#command-history"></a>Command history</h3>
 <div class="sect3">
-<h4 id="_tabby_add_command"><code>tabby add "&lt;command&gt;"</code></h4>
+<h4 id="tabby-add-command"><a class="anchor" href="#tabby-add-command"></a><code>tabby add "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Record a run of a command, as if it had just finished successfully in the current directory. The same rules apply as
 for automatic recording, so a command that is too short or excluded is silently ignored.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_tabby_remove_command"><code>tabby remove "&lt;command&gt;"</code></h4>
+<h4 id="tabby-remove-command"><a class="anchor" href="#tabby-remove-command"></a><code>tabby remove "&lt;command&gt;"</code></h4>
 <div class="paragraph">
-<p>Delete a stored command, including its directory usage and its pin.</p>
+<p>Delete a stored command, including its directory usage, its learned picks, its follow-ups, and its pin.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_tabby_query_query"><code>tabby query "&lt;query&gt;"</code></h4>
+<h4 id="tabby-query-query"><a class="anchor" href="#tabby-query-query"></a><code>tabby query "&lt;query&gt;"</code></h4>
 <div class="paragraph">
 <p>Print the matching commands in ranked order, one per line, using the current directory for ranking. The shell
 integration calls this when you press Tab.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_tabby_list"><code>tabby list</code></h4>
+<h4 id="tabby-next-command"><a class="anchor" href="#tabby-next-command"></a><code>tabby next "&lt;command&gt;"</code></h4>
+<div class="paragraph">
+<p>Print the commands that usually follow a command, most likely first, one per line. At most 50 are printed. The shell
+integration calls this when you press Tab on an empty prompt.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="tabby-list"><a class="anchor" href="#tabby-list"></a><code>tabby list</code></h4>
 <div class="paragraph">
 <p>List stored commands with their last-used time and score, highest score first. Pinned commands are marked
 <code>[pinned]</code>. The scores shown here do not include directory use.</p>
@@ -1100,7 +1205,96 @@ integration calls this when you press Tab.</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_tabby_pin_command"><code>tabby pin "&lt;command&gt;"</code></h4>
+<h4 id="tabby-forget-query"><a class="anchor" href="#tabby-forget-query"></a><code>tabby forget [query]</code></h4>
+<div class="paragraph">
+<p>Forget the commands learned for a query, so that it ranks normally again. Tabby prints how many picks were deleted.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--all</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Forget the learned picks for every query. It cannot be combined with a query.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="tabby-stats"><a class="anchor" href="#tabby-stats"></a><code>tabby stats</code></h4>
+<div class="paragraph">
+<p>Show a summary of the store, the most used commands, and alias suggestions. The counts cover the last month, plus
+pinned commands.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--top &lt;n&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of most used commands to show. The default is 10. Use 0 to hide the list.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--shell &lt;shell&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Syntax for the alias suggestions: <code>zsh</code>, <code>bash</code>, or <code>powershell</code>. The default is <code>powershell</code> on Windows and <code>zsh</code>
+everywhere else.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Alias suggestions list up to five commands that are at least 15 characters long and have been run at least five times,
+the ones that would save the most typing first. Each suggestion is named after the first letter of each word, for
+example <code>dcudb</code> for <code>docker compose up -d --build</code>. When that name is already a program on your <code>PATH</code>, or is used by
+an earlier suggestion, a number is added, for example <code>gssb2</code>.</p>
+</div>
+<div class="paragraph">
+<p>For Zsh and Bash, a suggestion is an <code>alias</code> line. Arguments you type after the alias are passed on to the command.
+For PowerShell, it is a <code>function</code>, because PowerShell aliases cannot include arguments. Arguments typed after the
+function name are not passed on.</p>
+</div>
+<div class="paragraph">
+<p>Example output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Usage over the last month, plus pinned commands
+
+Commands stored:    214 (3 pinned)
+Runs recorded:      1532
+Learned picks:      12
+Learned follow-ups: 87
+
+Most used:
+     87  2026-11-17 09:12  docker compose up -d --build
+     64  2026-11-17 08:55  go test ./...
+
+Alias suggestions:
+  docker compose up -d --build (87 runs)
+    alias dcudb='docker compose up -d --build'</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Tabby does not add aliases for you. Copy the ones you want into your shell profile.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="tabby-pin-command"><a class="anchor" href="#tabby-pin-command"></a><code>tabby pin "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Pin a command so that it never expires. If the command is not stored yet, it is added. Pinning is refused for a
 command that matches an exclusion pattern.</p>
@@ -1111,7 +1305,7 @@ command.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_tabby_unpin_command"><code>tabby unpin "&lt;command&gt;"</code></h4>
+<h4 id="tabby-unpin-command"><a class="anchor" href="#tabby-unpin-command"></a><code>tabby unpin "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Unpin a command so that it expires normally again. It is an error to unpin a command that is not pinned.</p>
 </div>
@@ -1130,14 +1324,14 @@ If an unpinned command has not been used in the last month, it is deleted the ne
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exclusions">Exclusions</h3>
+<h3 id="exclusions"><a class="anchor" href="#exclusions"></a>Exclusions</h3>
 <div class="paragraph">
 <p>Exclusions are case-insensitive glob patterns, not regular expressions. They support <code><strong></code> (any text), <code>?</code> (any single
 character), and <code>[&#8230;&#8203;]</code> (any character in the set, or not in it when the set starts with <code>^</code>). A pattern must match the whole command, so most patterns start
 and end with <code></strong></code>.</p>
 </div>
 <div class="sect3">
-<h4 id="_tabby_exclude_add_pattern"><code>tabby exclude add "&lt;pattern&gt;"</code></h4>
+<h4 id="tabby-exclude-add-pattern"><a class="anchor" href="#tabby-exclude-add-pattern"></a><code>tabby exclude add "&lt;pattern&gt;"</code></h4>
 <div class="paragraph">
 <p>Add an exclusion and delete every stored command that matches it, including pinned commands. Tabby prints how many
 commands were deleted.</p>
@@ -1163,19 +1357,19 @@ delete all history.</p></td>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_tabby_exclude_remove_pattern"><code>tabby exclude remove "&lt;pattern&gt;"</code></h4>
+<h4 id="tabby-exclude-remove-pattern"><a class="anchor" href="#tabby-exclude-remove-pattern"></a><code>tabby exclude remove "&lt;pattern&gt;"</code></h4>
 <div class="paragraph">
 <p>Remove an exclusion. Commands it kept out in the past are not restored.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_tabby_exclude_list"><code>tabby exclude list</code></h4>
+<h4 id="tabby-exclude-list"><a class="anchor" href="#tabby-exclude-list"></a><code>tabby exclude list</code></h4>
 <div class="paragraph">
 <p>List the exclusion patterns with the time each was added, newest first.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_built_in_exclusions">Built-in exclusions</h4>
+<h4 id="built-in-exclusions"><a class="anchor" href="#built-in-exclusions"></a>Built-in exclusions</h4>
 <div class="paragraph">
 <p>The built-in exclusions cover:</p>
 </div>
@@ -1221,22 +1415,22 @@ options for MySQL and MariaDB</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_other_commands">Other commands</h3>
+<h3 id="other-commands"><a class="anchor" href="#other-commands"></a>Other commands</h3>
 <div class="sect3">
-<h4 id="_tabby_path"><code>tabby path</code></h4>
+<h4 id="tabby-path"><a class="anchor" href="#tabby-path"></a><code>tabby path</code></h4>
 <div class="paragraph">
-<p>Print the absolute path to the SQLite database. See <a href="#_storage">Storage</a>.</p>
+<p>Print the absolute path to the SQLite database. See <a href="#storage">Storage</a>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_tabby_prepare"><code>tabby prepare</code></h4>
+<h4 id="tabby-prepare"><a class="anchor" href="#tabby-prepare"></a><code>tabby prepare</code></h4>
 <div class="paragraph">
 <p>Create the database and apply any pending schema migrations, then exit. Every other command that uses the database
 does this too, so you only need it to set up the database ahead of time.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_tabby_version"><code>tabby --version</code></h4>
+<h4 id="tabby-version"><a class="anchor" href="#tabby-version"></a><code>tabby --version</code></h4>
 <div class="paragraph">
 <p>Print the version, build date, and license. <code>tabby -version</code> also works.</p>
 </div>
@@ -1245,7 +1439,7 @@ does this too, so you only need it to set up the database ahead of time.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_environment_variables">Environment variables</h2>
+<h2 id="environment-variables"><a class="anchor" href="#environment-variables"></a>Environment variables</h2>
 <div class="sectionbody">
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -1271,6 +1465,14 @@ PowerShell integration sets it, because <code>Set-Location</code> does not chang
 process. The Zsh integration sets it to the directory the command started in.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>TABBY_QUERY</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Used by the PowerShell integration to pass the query that a command was picked for, with <code>--from-env</code> on <code>add</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>TABBY_PREVIOUS</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Used by the PowerShell integration to pass the previous command, with <code>--from-env</code> on <code>add</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>TABBY_INPUT</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Used by the PowerShell integration to pass the command or query text, with the hidden <code>--from-env</code> option on <code>add</code>
 and <code>query</code>. PowerShell 5.1 does not escape embedded quotes in arguments to native commands, so the text goes through
@@ -1281,7 +1483,7 @@ the environment instead.</p></td>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_storage">Storage</h2>
+<h2 id="storage"><a class="anchor" href="#storage"></a>Storage</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The database is a single SQLite file named <code>tabby.db</code>.</p>
@@ -1327,7 +1529,7 @@ created by a newer one, and asks you to upgrade.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cautions">Cautions</h2>
+<h2 id="cautions"><a class="anchor" href="#cautions"></a>Cautions</h2>
 <div class="sectionbody">
 <div class="admonitionblock caution">
 <table>
@@ -1413,7 +1615,39 @@ in. Folder names can reveal client or project names.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p><strong>Tab is taken over.</strong> Tabby binds Tab and Shift+Tab. In Bash, Tab is bound to <code>menu-complete</code>, which cycles through
+<p><strong>Learned picks and follow-ups are stored too.</strong> Each pick stores the query you typed next to the command, and each
+follow-up stores which command you ran right after which, in the same unencrypted database. Together they show the
+order of your work, not only what you ran.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Check alias names before using them.</strong> Suggested names are only checked against programs on your <code>PATH</code>. They can
+still clash with shell built-ins, existing aliases and functions, or PowerShell&#8217;s built-in aliases such as <code>gc</code>, <code>gp</code>,
+and <code>sl</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Tab is taken over.</strong> Tabby binds Tab and Shift+Tab, including on an empty prompt when it has a prediction. In Bash, Tab is bound to <code>menu-complete</code>, which cycles through
 completions instead of listing them.</p>
 </div>
 </td>
@@ -1423,7 +1657,7 @@ completions instead of listing them.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license">License</h2>
+<h2 id="license"><a class="anchor" href="#license"></a>License</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Tabby is licensed under the BSD 3-Clause License. See <a href="LICENSE">LICENSE</a>.</p>
@@ -1433,7 +1667,7 @@ completions instead of listing them.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-16 15:12:08
+Last updated 2026-11-17 14:54:14 -0500
 </div>
 </div>
 </body>
