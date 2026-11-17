@@ -12,8 +12,10 @@ import (
 )
 
 // Add records a successful run of command at location. A zero location
-// records the run without directory context.
-func Add(db *sql.DB, command string, location Location) error {
+// records the run without directory context. A non-empty query records that
+// the command was picked as a completion of query. A non-empty previous
+// records that the command followed previous, if previous is stored.
+func Add(db *sql.DB, command string, location Location, query string, previous string) error {
 	if strings.IndexFunc(command, unicode.IsControl) >= 0 {
 		return nil
 	}
@@ -68,6 +70,33 @@ func Add(db *sql.DB, command string, location Location) error {
 		}
 	}
 
+	if query = NormalizeQuery(query); query != "" {
+		_, err = tx.Exec(`
+			INSERT INTO picks (query, command, use_count, last_used_at)
+			VALUES (?, ?, 1, ?)
+			ON CONFLICT(query, command) DO UPDATE SET
+				use_count = use_count + 1,
+				last_used_at = excluded.last_used_at
+		`, query, command, now)
+		if err != nil {
+			return err
+		}
+	}
+
+	if previous = strings.TrimSpace(previous); previous != "" && previous != command {
+		_, err = tx.Exec(`
+			INSERT INTO transitions (previous, command, use_count, last_used_at)
+			SELECT ?, ?, 1, ?
+			WHERE EXISTS (SELECT 1 FROM commands WHERE command = ?)
+			ON CONFLICT(previous, command) DO UPDATE SET
+				use_count = use_count + 1,
+				last_used_at = excluded.last_used_at
+		`, previous, command, now, previous)
+		if err != nil {
+			return err
+		}
+	}
+
 	if err := prune(tx); err != nil {
 		return err
 	}
@@ -90,8 +119,136 @@ func prune(tx *sql.Tx) error {
 		DELETE FROM command_dirs
 		WHERE last_used_at <= unixepoch('now', '-1 month')
 	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+		DELETE FROM picks
+		WHERE last_used_at <= unixepoch('now', '-1 month')
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+		DELETE FROM transitions
+		WHERE last_used_at <= unixepoch('now', '-1 month')
+	`)
 
 	return err
+}
+
+// ListNext returns the recent transitions from previous to commands that
+// List still returns.
+func ListNext(db *sql.DB, previous string) ([]Transition, error) {
+	if previous = strings.TrimSpace(previous); previous == "" {
+		return nil, nil
+	}
+
+	rows, err := db.Query(`
+		SELECT t.use_count, t.last_used_at, c.command, c.use_count, c.last_used_at, c.pinned
+		FROM transitions t
+		JOIN commands c ON c.command = t.command
+		WHERE t.previous = ?
+			AND t.last_used_at > unixepoch('now', '-1 month')
+			AND (c.pinned <> 0 OR c.last_used_at > unixepoch('now', '-1 month'))
+	`, previous)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var transitions []Transition
+
+	for rows.Next() {
+		var transition Transition
+
+		if err := rows.Scan(
+			&transition.UseCount,
+			&transition.LastUsed,
+			&transition.Command.Text,
+			&transition.Command.UseCount,
+			&transition.Command.LastUsed,
+			&transition.Command.Pinned,
+		); err != nil {
+			return nil, err
+		}
+
+		transitions = append(transitions, transition)
+	}
+
+	return transitions, rows.Err()
+}
+
+// NormalizeQuery returns query in the form picks are stored under.
+func NormalizeQuery(query string) string {
+	return strings.ToLower(strings.TrimSpace(query))
+}
+
+// ListPicks returns the recent picks for query.
+func ListPicks(db *sql.DB, query string) ([]Pick, error) {
+	query = NormalizeQuery(query)
+	if query == "" {
+		return nil, nil
+	}
+
+	rows, err := db.Query(`
+		SELECT command, use_count, last_used_at FROM picks
+		WHERE query = ? AND last_used_at > unixepoch('now', '-1 month')
+	`, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var picks []Pick
+
+	for rows.Next() {
+		var pick Pick
+
+		if err := rows.Scan(&pick.Command, &pick.UseCount, &pick.LastUsed); err != nil {
+			return nil, err
+		}
+
+		picks = append(picks, pick)
+	}
+
+	return picks, rows.Err()
+}
+
+// ForgetPicks deletes the picks for query, or every pick when query is empty.
+// It returns the number of deleted picks.
+func ForgetPicks(db *sql.DB, query string) (int64, error) {
+	var result sql.Result
+	var err error
+	if query = NormalizeQuery(query); query == "" {
+		result, err = db.Exec(`DELETE FROM picks`)
+	} else {
+		result, err = db.Exec(`DELETE FROM picks WHERE query = ?`, query)
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	return result.RowsAffected()
+}
+
+// ReadStats returns totals for the commands that List returns.
+func ReadStats(db *sql.DB) (Stats, error) {
+	var stats Stats
+	err := db.QueryRow(`
+		SELECT
+			count(*),
+			coalesce(sum(pinned <> 0), 0),
+			coalesce(sum(use_count), 0),
+			(SELECT count(*) FROM picks WHERE last_used_at > unixepoch('now', '-1 month')),
+			(SELECT count(*) FROM transitions WHERE last_used_at > unixepoch('now', '-1 month'))
+		FROM commands
+		WHERE pinned <> 0 OR last_used_at > unixepoch('now', '-1 month')
+	`).Scan(&stats.Commands, &stats.Pinned, &stats.Runs, &stats.Picks, &stats.Transitions)
+
+	return stats, err
 }
 
 // Pin keeps command from expiring, adding it to the store first if needed.

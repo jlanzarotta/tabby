@@ -12,7 +12,11 @@ import (
 	"tabby/internal/store"
 )
 
-const inputEnvironmentVariable = "TABBY_INPUT"
+const (
+	inputEnvironmentVariable    = "TABBY_INPUT"
+	queryEnvironmentVariable    = "TABBY_QUERY"
+	previousEnvironmentVariable = "TABBY_PREVIOUS"
+)
 
 // input returns the positional value, or the value of TABBY_INPUT when
 // fromEnv is set. PowerShell 5.1 passes the text through the environment
@@ -34,7 +38,17 @@ func (cmd *AddCommand) Run(app *App) error {
 		return err
 	}
 
-	return store.Add(app.DB, command, store.CurrentLocation())
+	query := cmd.Query
+	if cmd.FromEnv && query == "" {
+		query = os.Getenv(queryEnvironmentVariable)
+	}
+
+	previous := cmd.Previous
+	if cmd.FromEnv && previous == "" {
+		previous = os.Getenv(previousEnvironmentVariable)
+	}
+
+	return store.Add(app.DB, command, store.CurrentLocation(), query, previous)
 }
 
 func (cmd *RemoveCommand) Run(app *App) error {
@@ -79,6 +93,44 @@ func (cmd *UnpinCommand) Run(app *App) error {
 	return store.Unpin(app.DB, cmd.Command)
 }
 
+func (cmd *NextCommand) Run(app *App) error {
+	previous, err := input(cmd.Previous, cmd.FromEnv)
+	if err != nil {
+		return err
+	}
+
+	transitions, err := store.ListNext(app.DB, previous)
+	if err != nil {
+		return err
+	}
+
+	results := matcher.Next(transitions)
+	results = results[:min(len(results), 50)]
+
+	for _, ranked := range results {
+		fmt.Println(ranked.Command.Text)
+	}
+
+	return nil
+}
+
+func (cmd *ForgetCommand) Run(app *App) error {
+	if cmd.Query == "" && !cmd.All {
+		return fmt.Errorf("pass a query, or --all to forget every learned pick")
+	}
+	if cmd.Query != "" && cmd.All {
+		return fmt.Errorf("--all cannot be combined with a query")
+	}
+
+	forgotten, err := store.ForgetPicks(app.DB, cmd.Query)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Forgot %d learned pick(s)\n", forgotten)
+	return nil
+}
+
 func (cmd *PathCommand) Run() error {
 	path, err := store.Path()
 	if err != nil {
@@ -116,7 +168,16 @@ func (cmd *QueryCommand) Run(app *App) error {
 		return err
 	}
 
-	results := matcher.Query(commands, text, matcher.LocalScores(usages, time.Now()))
+	picks, err := store.ListPicks(app.DB, text)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	results := matcher.Query(commands, text, matcher.Context{
+		Local: matcher.LocalScores(usages, now),
+		Picks: matcher.PickScores(picks, now),
+	})
 	results = results[:min(len(results), 50)]
 
 	for _, ranked := range results {

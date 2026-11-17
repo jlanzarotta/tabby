@@ -18,6 +18,10 @@ takes over.
 * Directory-aware ranking: commands you ran in the current directory, or elsewhere in the same git repository, rank
   above commands you ran somewhere else.
 * Pinning: pinned commands never expire and do not lose rank as they age.
+* Learning from your picks: when you cycle to a command and run it, Tabby offers it first the next time you type the
+  same query.
+* Next-command prediction: press Tab on an empty prompt to get the commands that usually follow the one you just ran.
+* Usage statistics with alias suggestions for the long commands you run most.
 * Only successful commands are recorded. Failed commands are never stored.
 * Exclusion patterns that keep secrets and noise out of the store, with a large built-in set.
 * Integration for Zsh, Bash, and PowerShell.
@@ -78,6 +82,9 @@ Invoke-Expression (& { (tabby init powershell | Out-String) })
 
 |Shift+Tab
 |Expand to the last match, or move to the previous match.
+
+|Tab on an empty prompt
+|Insert the command that most often follows the last command you ran. Press again to move to the next prediction.
 |===
 
 Tabby only completes when the cursor is at the end of the line. Otherwise, and whenever there is no match, the key
@@ -91,7 +98,9 @@ After each command finishes, the shell integration checks its exit status. When 
 integration runs `tabby add` in the background. Tabby then stores the command along with:
 
 * how many times it has been used and when it was last used, and
-* the directory it ran in and the root of the git repository around that directory, if there is one.
+* the directory it ran in and the root of the git repository around that directory, if there is one, and
+* the query, when the command was inserted by Tabby and you ran it without changing it. See <<Learned picks>>.
+* the command you ran just before it in the same shell, if it was stored. See <<Next-command prediction>>.
 
 === Matching
 
@@ -104,7 +113,8 @@ integration runs `tabby add` in the background. Tabby then stores the command al
 
 === Ranking
 
-Matches are ordered by how well the text matches first:
+Commands you have picked for the exact same query come first. See <<Learned picks>>. All other matches are ordered
+by how well the text matches:
 
 . matches that land on more word starts,
 . then matches with more consecutive characters,
@@ -132,8 +142,8 @@ repository wins a tie against one you run often somewhere else.
 
 A pinned command never gets a recency weight lower than 2, so it ranks as if it had been used within the last day.
 
-NOTE: Text match quality always comes first. A better fuzzy match from anywhere beats a weaker match from the current
-directory. Directory use and pinning decide the order among equally good matches.
+NOTE: Apart from learned picks, text match quality always comes first. A better fuzzy match from anywhere beats a
+weaker match from the current directory. Directory use and pinning decide the order among equally good matches.
 
 ==== How directories are compared
 
@@ -143,6 +153,43 @@ directory. Directory use and pinning decide the order among equally good matches
 * On Windows, paths are compared case-insensitively.
 * Commands recorded before directory tracking was added have no directory data. The directory boost builds up as you
   use the shell.
+
+=== Learned picks
+
+When you press Tab, cycle to a command, and run it exactly as Tabby inserted it, Tabby remembers that you picked that
+command for that query. The next time you type the same query, the picked command is offered first. This fixes the
+cases where the fuzzy ranking puts the command you want further down the list, and it needs no setup.
+
+* Picks are tied to the exact query, ignoring case. A pick for `dcu` does not affect `dc` or `dcud`.
+* When several commands have been picked for the same query, they are ordered by how often and how recently you picked
+  them, using the same recency weights as above. They all come before commands that were never picked.
+* Picks do not depend on the directory. A command picked in one repository is offered first for that query everywhere.
+* A pick is only recorded when the command succeeds and you did not edit the line. Accepting the first match also
+  counts, which keeps it first.
+* Picks expire after a month without use, and are deleted with their command.
+
+If Tabby learned the wrong command, run `tabby forget <query>` to start over for that query.
+
+=== Next-command prediction
+
+Each shell remembers the last command you ran successfully. When you run the next one, Tabby records that it followed
+the previous one. Press Tab on an empty prompt, and Tabby inserts the command that most often follows the last command
+you ran, for example `git commit` right after `git add .`, or `podman push` right after `podman build`. Press Tab again
+to cycle through the other predictions.
+
+* Predictions are ordered by how often and how recently that command followed the previous one, using the same recency
+  weights as above. Ties go to the command with the higher overall score.
+* Each shell tracks its own previous command, so commands run in two terminals at once do not mix. A new shell has no
+  previous command until you run one.
+* A failed command breaks the chain: the next command is not recorded as following anything.
+* A command that is not stored, because it is too short, hidden, or excluded, also breaks the chain. For example,
+  nothing is learned across a `cd`, since `cd *` is excluded by default.
+* Running the same command twice in a row is not recorded, because up-arrow already covers that.
+* When there is no previous command or no prediction for it, Tab on an empty prompt falls back to normal shell
+  completion.
+* Follow-ups expire after a month without use, and are deleted with either of their commands.
+
+To see the predictions without the shell, run `tabby next "<command>"`.
 
 === What is not stored
 
@@ -157,8 +204,8 @@ directory. Directory use and pinning decide the order among equally good matches
 
 === Retention
 
-Commands that have not been used in the last month are deleted, unless they are pinned. Directory usage older than a
-month is deleted too, including for pinned commands. Cleanup runs each time a command is recorded.
+Commands that have not been used in the last month are deleted, unless they are pinned. Directory usage, learned
+picks, and follow-ups older than a month are deleted too, including for pinned commands. Cleanup runs each time a command is recorded.
 
 == Commands
 
@@ -177,12 +224,17 @@ for automatic recording, so a command that is too short or excluded is silently 
 
 ==== `tabby remove "<command>"`
 
-Delete a stored command, including its directory usage and its pin.
+Delete a stored command, including its directory usage, its learned picks, its follow-ups, and its pin.
 
 ==== `tabby query "<query>"`
 
 Print the matching commands in ranked order, one per line, using the current directory for ranking. The shell
 integration calls this when you press Tab.
+
+==== `tabby next "<command>"`
+
+Print the commands that usually follow a command, most likely first, one per line. At most 50 are printed. The shell
+integration calls this when you press Tab on an empty prompt.
 
 ==== `tabby list`
 
@@ -196,6 +248,65 @@ List stored commands with their last-used time and score, highest score first. P
 |`--pinned`
 |List only pinned commands.
 |===
+
+==== `tabby forget [query]`
+
+Forget the commands learned for a query, so that it ranks normally again. Tabby prints how many picks were deleted.
+
+[cols="1,3"]
+|===
+|Option |Description
+
+|`--all`
+|Forget the learned picks for every query. It cannot be combined with a query.
+|===
+
+==== `tabby stats`
+
+Show a summary of the store, the most used commands, and alias suggestions. The counts cover the last month, plus
+pinned commands.
+
+[cols="1,3"]
+|===
+|Option |Description
+
+|`--top <n>`
+|Number of most used commands to show. The default is 10. Use 0 to hide the list.
+
+|`--shell <shell>`
+|Syntax for the alias suggestions: `zsh`, `bash`, or `powershell`. The default is `powershell` on Windows and `zsh`
+everywhere else.
+|===
+
+Alias suggestions list up to five commands that are at least 15 characters long and have been run at least five times,
+the ones that would save the most typing first. Each suggestion is named after the first letter of each word, for
+example `dcudb` for `docker compose up -d --build`. When that name is already a program on your `PATH`, or is used by
+an earlier suggestion, a number is added, for example `gssb2`.
+
+For Zsh and Bash, a suggestion is an `alias` line. Arguments you type after the alias are passed on to the command.
+For PowerShell, it is a `function`, because PowerShell aliases cannot include arguments. Arguments typed after the
+function name are not passed on.
+
+Example output:
+
+----
+Usage over the last month, plus pinned commands
+
+Commands stored:    214 (3 pinned)
+Runs recorded:      1532
+Learned picks:      12
+Learned follow-ups: 87
+
+Most used:
+     87  2026-11-17 09:12  docker compose up -d --build
+     64  2026-11-17 08:55  go test ./...
+
+Alias suggestions:
+  docker compose up -d --build (87 runs)
+    alias dcudb='docker compose up -d --build'
+----
+
+Tabby does not add aliases for you. Copy the ones you want into your shell profile.
 
 ==== `tabby pin "<command>"`
 
@@ -288,6 +399,12 @@ are ignored.
 PowerShell integration sets it, because `Set-Location` does not change the working directory of the PowerShell
 process. The Zsh integration sets it to the directory the command started in.
 
+|`TABBY_QUERY`
+|Used by the PowerShell integration to pass the query that a command was picked for, with `--from-env` on `add`.
+
+|`TABBY_PREVIOUS`
+|Used by the PowerShell integration to pass the previous command, with `--from-env` on `add`.
+
 |`TABBY_INPUT`
 |Used by the PowerShell integration to pass the command or query text, with the hidden `--from-env` option on `add`
 and `query`. PowerShell 5.1 does not escape embedded quotes in arguments to native commands, so the text goes through
@@ -356,7 +473,21 @@ in. Folder names can reveal client or project names.
 
 [NOTE]
 ====
-*Tab is taken over.* Tabby binds Tab and Shift+Tab. In Bash, Tab is bound to `menu-complete`, which cycles through
+*Learned picks and follow-ups are stored too.* Each pick stores the query you typed next to the command, and each
+follow-up stores which command you ran right after which, in the same unencrypted database. Together they show the
+order of your work, not only what you ran.
+====
+
+[WARNING]
+====
+*Check alias names before using them.* Suggested names are only checked against programs on your `PATH`. They can
+still clash with shell built-ins, existing aliases and functions, or PowerShell's built-in aliases such as `gc`, `gp`,
+and `sl`.
+====
+
+[NOTE]
+====
+*Tab is taken over.* Tabby binds Tab and Shift+Tab, including on an empty prompt when it has a prediction. In Bash, Tab is bound to `menu-complete`, which cycles through
 completions instead of listing them.
 ====
 

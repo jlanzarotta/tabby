@@ -14,14 +14,14 @@ func TestQueryPrefersCommandsUsedHere(t *testing.T) {
 		{Text: "go test ./...", UseCount: 5, LastUsed: now.Unix()},
 	}
 
-	if got := Query(commands, "gt", nil); got[0].Command.Text != "go tool pprof" {
+	if got := Query(commands, "gt", Context{}); got[0].Command.Text != "go tool pprof" {
 		t.Fatalf("without local usage, first match = %q, want %q", got[0].Command.Text, "go tool pprof")
 	}
 
 	local := LocalScores([]store.DirUsage{
 		{Command: "go test ./...", UseCount: 5, LastUsed: now.Unix(), SameDir: true},
 	}, now)
-	if got := Query(commands, "gt", local); got[0].Command.Text != "go test ./..." {
+	if got := Query(commands, "gt", Context{Local: local}); got[0].Command.Text != "go test ./..." {
 		t.Fatalf("with local usage, first match = %q, want %q", got[0].Command.Text, "go test ./...")
 	}
 }
@@ -49,5 +49,27 @@ func TestPinnedCommandsDoNotDecay(t *testing.T) {
 	}
 	if rankScore(unpinned, now, 0) >= rankScore(pinned, now, 0) {
 		t.Fatal("unpinned command scored at least as high as the pinned one")
+	}
+}
+
+func TestQueryPutsPickedCommandsFirst(t *testing.T) {
+	now := time.Now()
+	commands := []store.Command{
+		{Text: "docker compose up", UseCount: 50, LastUsed: now.Unix()},
+		{Text: "docker compose up -d --build", UseCount: 1, LastUsed: now.Unix()},
+		{Text: "docker container unpause", UseCount: 1, LastUsed: now.Unix()},
+	}
+
+	picks := PickScores([]store.Pick{
+		{Command: "docker container unpause", UseCount: 1, LastUsed: now.Add(-48 * time.Hour).Unix()},
+		{Command: "docker compose up -d --build", UseCount: 2, LastUsed: now.Unix()},
+	}, now)
+
+	got := Query(commands, "dcu", Context{Picks: picks})
+	want := []string{"docker compose up -d --build", "docker container unpause", "docker compose up"}
+	for i, text := range want {
+		if got[i].Command.Text != text {
+			t.Fatalf("match %d = %q, want %q", i, got[i].Command.Text, text)
+		}
 	}
 }

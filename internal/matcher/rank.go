@@ -38,6 +38,21 @@ func LocalScores(usages []store.DirUsage, now time.Time) map[string]float64 {
 	return scores
 }
 
+// PickScores returns the frecency of each command picked for a query, keyed
+// by command text.
+func PickScores(picks []store.Pick, now time.Time) map[string]float64 {
+	if len(picks) == 0 {
+		return nil
+	}
+
+	scores := make(map[string]float64, len(picks))
+	for _, pick := range picks {
+		scores[pick.Command] = float64(pick.UseCount) * AgeMultiplier(pick.LastUsed, now)
+	}
+
+	return scores
+}
+
 func rankScore(command store.Command, now time.Time, local float64) float64 {
 	age := AgeMultiplier(command.LastUsed, now)
 	if command.Pinned {

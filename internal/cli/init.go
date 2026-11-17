@@ -11,8 +11,10 @@ import (
 )
 
 type AddCommand struct {
-	Command string
-	FromEnv bool
+	Command  string
+	Query    string
+	Previous string
+	FromEnv  bool
 }
 
 type RemoveCommand struct {
@@ -21,6 +23,21 @@ type RemoveCommand struct {
 
 type ListCommand struct {
 	PinnedOnly bool
+}
+
+type NextCommand struct {
+	Previous string
+	FromEnv  bool
+}
+
+type StatsCommand struct {
+	Top   int
+	Shell string
+}
+
+type ForgetCommand struct {
+	Query string
+	All   bool
 }
 
 type PinCommand struct {
@@ -105,9 +122,12 @@ func newRootCommand(version string) *cobra.Command {
 		newListCommand(),
 		newPinCommand(),
 		newUnpinCommand(),
+		newForgetCommand(),
+		newStatsCommand(),
 		newPathCommand(),
 		newPrepareCommand(),
 		newQueryCommand(),
+		newNextCommand(),
 		newExcludeCommand(),
 	)
 
@@ -161,6 +181,10 @@ func newAddCommand() *cobra.Command {
 	}
 	command.Flags().BoolVar(&cmd.FromEnv, "from-env", false, fromEnvHelp)
 	_ = command.Flags().MarkHidden("from-env")
+	command.Flags().StringVar(&cmd.Query, "query", "", "Record that the command was picked as a completion of this query")
+	_ = command.Flags().MarkHidden("query")
+	command.Flags().StringVar(&cmd.Previous, "previous", "", "Record that the command followed this command")
+	_ = command.Flags().MarkHidden("previous")
 
 	return command
 }
@@ -188,6 +212,55 @@ func newListCommand() *cobra.Command {
 		}),
 	}
 	command.Flags().BoolVar(&cmd.PinnedOnly, "pinned", false, "List only pinned commands")
+
+	return command
+}
+
+func newNextCommand() *cobra.Command {
+	var cmd NextCommand
+	command := &cobra.Command{
+		Use:   "next [previous]",
+		Short: "Predict the commands that usually follow a command",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: withDB(func(app *App, args []string) error {
+			cmd.Previous = optionalArg(args)
+			return cmd.Run(app)
+		}),
+	}
+	command.Flags().BoolVar(&cmd.FromEnv, "from-env", false, fromEnvHelp)
+	_ = command.Flags().MarkHidden("from-env")
+
+	return command
+}
+
+func newForgetCommand() *cobra.Command {
+	var cmd ForgetCommand
+	command := &cobra.Command{
+		Use:   "forget [query]",
+		Short: "Forget the commands learned for a query",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: withDB(func(app *App, args []string) error {
+			cmd.Query = optionalArg(args)
+			return cmd.Run(app)
+		}),
+	}
+	command.Flags().BoolVar(&cmd.All, "all", false, "Forget the learned commands for every query")
+
+	return command
+}
+
+func newStatsCommand() *cobra.Command {
+	var cmd StatsCommand
+	command := &cobra.Command{
+		Use:   "stats",
+		Short: "Show usage statistics and alias suggestions",
+		Args:  cobra.NoArgs,
+		RunE: withDB(func(app *App, _ []string) error {
+			return cmd.Run(app)
+		}),
+	}
+	command.Flags().IntVar(&cmd.Top, "top", 10, "Number of most used commands to show")
+	command.Flags().StringVar(&cmd.Shell, "shell", defaultShell(), "Shell syntax for alias suggestions: zsh, bash, or powershell")
 
 	return command
 }

@@ -11,6 +11,16 @@ import (
 type matchedCommand struct {
 	RankedCommand
 	textScore
+	pick float64
+}
+
+// Context holds the extra scores that depend on where and how a query runs.
+// Either map may be nil.
+type Context struct {
+	// Local holds scores from LocalScores, keyed by command text.
+	Local map[string]float64
+	// Picks holds scores from PickScores, keyed by command text.
+	Picks map[string]float64
 }
 
 type textScore struct {
@@ -23,9 +33,9 @@ type matchScratch struct {
 	scores []textScore
 }
 
-// Query returns the commands that match query, best first. local holds the
-// extra score of each command from LocalScores and may be nil.
-func Query(commands []store.Command, query string, local map[string]float64) []RankedCommand {
+// Query returns the commands that match query, best first. Commands picked
+// for query come before all other matches.
+func Query(commands []store.Command, query string, context Context) []RankedCommand {
 	queryRunes := lowerRunes(nil, query)
 	if len(queryRunes) <= 1 {
 		return nil
@@ -42,14 +52,18 @@ func Query(commands []store.Command, query string, local map[string]float64) []R
 			matches = append(matches, matchedCommand{
 				RankedCommand: RankedCommand{
 					Command: command,
-					Score:   rankScore(command, now, local[command.Text]),
+					Score:   rankScore(command, now, context.Local[command.Text]),
 				},
 				textScore: score,
+				pick:      context.Picks[command.Text],
 			})
 		}
 	}
 
 	sort.SliceStable(matches, func(i, j int) bool {
+		if matches[i].pick != matches[j].pick {
+			return matches[i].pick > matches[j].pick
+		}
 		if matches[i].textScore == matches[j].textScore {
 			return matches[i].Score > matches[j].Score
 		}

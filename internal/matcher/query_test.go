@@ -18,7 +18,7 @@ func TestQueryMatchingAndOrdering(t *testing.T) {
 		{Text: "ubuntu run dev", UseCount: 1000, LastUsed: now},
 	}
 
-	got := Query(commands, "BRD", nil)
+	got := Query(commands, "BRD", Context{})
 	gotTexts := make([]string, len(got))
 	for i, command := range got {
 		gotTexts[i] = command.Command.Text
@@ -37,7 +37,7 @@ func TestQueryRequiresAbsoluteOrder(t *testing.T) {
 		LastUsed: time.Now().Unix(),
 	}}
 
-	if got := Query(commands, "bdr", nil); len(got) != 0 {
+	if got := Query(commands, "bdr", Context{}); len(got) != 0 {
 		t.Fatalf("Query() returned %d matches, want none", len(got))
 	}
 }
@@ -62,7 +62,7 @@ func BenchmarkQuery(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 			for b.Loop() {
-				Query(commands, "brd", nil)
+				Query(commands, "brd", Context{})
 			}
 		})
 	}
