@@ -13,7 +13,7 @@ takes over.
 
 == Features
 
-* Fuzzy matching on word starts, so `dcu` finds `docker compose up -d`.
+* Fuzzy matching on word starts, so `pcu` finds `podman compose up -d`.
 * Ranking by frecency: how often and how recently you ran a command.
 * Directory-aware ranking: commands you ran in the current directory, or elsewhere in the same git repository, rank
   above commands you ran somewhere else.
@@ -25,7 +25,7 @@ takes over.
 * Only successful commands are recorded. Failed commands are never stored.
 * Exclusion patterns that keep secrets and noise out of the store, with a large built-in set.
 * Integration for Zsh, Bash, and PowerShell.
-* A single local SQLite database. Nothing leaves your machine.
+* A single local SQLite database stores all your commands.
 
 == Install
 
