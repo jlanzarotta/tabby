@@ -29,8 +29,7 @@ func configDir() (string, error) {
 		return dir, nil
 	}
 
-	switch runtime.GOOS {
-	case "windows", "darwin", "ios", "plan9":
+	if runtime.GOOS == "windows" {
 		return os.UserConfigDir()
 	}
 

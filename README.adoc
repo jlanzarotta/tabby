@@ -26,6 +26,7 @@ takes over.
 * Exclusion patterns that keep secrets and noise out of the store, with a large built-in set.
 * Integration for Zsh, Bash, and PowerShell.
 * A single local SQLite database stores all your commands, use counts, exclusions, etc.
+* Support `XDG_CONFIG_HOME/tabby` on all platforms.
 
 == Install
 
@@ -393,7 +394,7 @@ Print the version, build date, and license. `tabby -version` also works.
 
 |`XDG_CONFIG_HOME`
 |When set to an absolute path, the database is stored in `$XDG_CONFIG_HOME/tabby`, on every platform, including
-Windows and macOS. Empty and relative values are ignored. See <<Database location>>.
+Windows. Empty and relative values are ignored. See <<Database location>>.
 
 |`TABBY_DIR`
 |The directory to use for directory-aware ranking. When it is not set, Tabby uses its working directory. The
@@ -421,8 +422,7 @@ The database is a single SQLite file named `tabby.db`. Run `tabby path` to see w
 Tabby chooses the location in this order:
 
 . When `XDG_CONFIG_HOME` is set to an absolute path, the database is `$XDG_CONFIG_HOME/tabby/tabby.db`. This applies
-  on every platform, including Windows and macOS, so you can keep Tabby in the same place as your other tools'
-  configuration.
+  on every platform, including Windows, so you can keep Tabby in the same place as your other tools' configuration.
 . Otherwise, the platform default is used:
 
 [cols="1,2"]
@@ -432,10 +432,7 @@ Tabby chooses the location in this order:
 |Windows
 |`%AppData%\tabby\tabby.db`
 
-|macOS
-|`~/Library/Application Support/tabby/tabby.db`
-
-|Linux and other Unix systems
+|Linux
 |`~/.config/tabby/tabby.db`
 |===
 
@@ -487,7 +484,7 @@ To go back to the platform default, unset `XDG_CONFIG_HOME` and move the files b
 
 === Permissions and upgrades
 
-On Linux and macOS, the `tabby` directory is created with mode `0700` and the database files with mode `0600`, so
+On Linux, the `tabby` directory is created with mode `0700` and the database files with mode `0600`, so
 only you can read them. Tabby also tightens these permissions each time it opens the database, which covers a
 database you moved in by hand. On Windows, Tabby relies on the permissions of the directory that holds the database,
 which is your user profile by default. If you point `XDG_CONFIG_HOME` outside your profile on Windows, make sure
