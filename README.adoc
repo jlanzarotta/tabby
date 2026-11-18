@@ -25,7 +25,7 @@ takes over.
 * Only successful commands are recorded. Failed commands are never stored.
 * Exclusion patterns that keep secrets and noise out of the store, with a large built-in set.
 * Integration for Zsh, Bash, and PowerShell.
-* A single local SQLite database stores all your commands.
+* A single local SQLite database stores all your commands, use counts, exclusions, etc.
 
 == Install
 
@@ -373,7 +373,8 @@ Run `tabby exclude list` to see the full set.
 
 ==== `tabby path`
 
-Print the absolute path to the SQLite database. See <<Storage>>.
+Print the absolute path to the SQLite database, taking `XDG_CONFIG_HOME` into account. Use it to check which
+database Tabby is using. See <<Database location>>.
 
 ==== `tabby prepare`
 
@@ -391,8 +392,8 @@ Print the version, build date, and license. `tabby -version` also works.
 |Variable |Description
 
 |`XDG_CONFIG_HOME`
-|When set to an absolute path, the database is stored in `$XDG_CONFIG_HOME/tabby`, on every platform. Relative values
-are ignored.
+|When set to an absolute path, the database is stored in `$XDG_CONFIG_HOME/tabby`, on every platform, including
+Windows and macOS. Empty and relative values are ignored. See <<Database location>>.
 
 |`TABBY_DIR`
 |The directory to use for directory-aware ranking. When it is not set, Tabby uses its working directory. The
@@ -413,14 +414,20 @@ the environment instead.
 
 == Storage
 
-The database is a single SQLite file named `tabby.db`.
+The database is a single SQLite file named `tabby.db`. Run `tabby path` to see where it is.
+
+=== Database location
+
+Tabby chooses the location in this order:
+
+. When `XDG_CONFIG_HOME` is set to an absolute path, the database is `$XDG_CONFIG_HOME/tabby/tabby.db`. This applies
+  on every platform, including Windows and macOS, so you can keep Tabby in the same place as your other tools'
+  configuration.
+. Otherwise, the platform default is used:
 
 [cols="1,2"]
 |===
-|Platform |Location
-
-|Any, with `XDG_CONFIG_HOME` set
-|`$XDG_CONFIG_HOME/tabby/tabby.db`
+|Platform |Default location
 
 |Windows
 |`%AppData%\tabby\tabby.db`
@@ -428,12 +435,63 @@ The database is a single SQLite file named `tabby.db`.
 |macOS
 |`~/Library/Application Support/tabby/tabby.db`
 
-|Linux
+|Linux and other Unix systems
 |`~/.config/tabby/tabby.db`
 |===
 
-On Linux and macOS, the directory is created with mode `0700` and the database files with mode `0600`, so only you
-can read them. On Windows, Tabby relies on the permissions of your user profile.
+For example, to use `~/.config` on every machine:
+
+[source,sh]
+----
+# Zsh or Bash, in ~/.zshrc or ~/.bashrc
+export XDG_CONFIG_HOME="$HOME/.config"
+----
+
+[source,powershell]
+----
+# PowerShell, in your profile
+$env:XDG_CONFIG_HOME = "$HOME\.config"
+----
+
+Details:
+
+* Tabby reads `XDG_CONFIG_HOME` every time it runs. It does not save the location anywhere.
+* The value must be an absolute path. An empty or relative value, such as `.config`, is ignored and the platform
+  default is used, as the XDG Base Directory Specification requires.
+* Tabby does not expand `~`. Most shells expand it in an unquoted assignment such as `export XDG_CONFIG_HOME=~/.config`,
+  but a quoted `"~/.config"` is passed through as is, so it is relative and ignored. Use `$HOME` instead.
+* On Windows, the value must be a full Windows path, such as `C:\Users\you\.config`. A Unix-style path such as
+  `/c/Users/you/.config` is not absolute on Windows and is ignored.
+* On Linux, the default is already `~/.config`, so setting `XDG_CONFIG_HOME` to `$HOME/.config` does not change
+  anything.
+* Every shell must see the same value to share one database. If you set `XDG_CONFIG_HOME` in `~/.bashrc` but not in
+  your PowerShell profile, Bash and PowerShell each keep their own history. Setting it as a user environment variable
+  in the operating system avoids this.
+* Set the variable before the shell starts using Tabby, for example in your profile. Changing it in a running shell
+  switches that shell to the other database from the next command on.
+* The `tabby` directory is created when it does not exist.
+
+=== Moving an existing database
+
+Tabby does not move the database when the location changes. It creates a new, empty database at the new location
+and leaves the old one where it was. To keep your history:
+
+. Run `tabby path` and note the current location.
+. Close every shell that uses Tabby, so that nothing has the database open.
+. Set `XDG_CONFIG_HOME`.
+. Create the `tabby` directory in `XDG_CONFIG_HOME`, and move `tabby.db` into it, together with `tabby.db-wal` and
+  `tabby.db-shm` if they exist.
+. Open a new shell and run `tabby path` to confirm the new location.
+
+To go back to the platform default, unset `XDG_CONFIG_HOME` and move the files back the same way.
+
+=== Permissions and upgrades
+
+On Linux and macOS, the `tabby` directory is created with mode `0700` and the database files with mode `0600`, so
+only you can read them. Tabby also tightens these permissions each time it opens the database, which covers a
+database you moved in by hand. On Windows, Tabby relies on the permissions of the directory that holds the database,
+which is your user profile by default. If you point `XDG_CONFIG_HOME` outside your profile on Windows, make sure
+other users cannot read that directory.
 
 The schema is upgraded automatically when a newer Tabby opens the database. An older Tabby refuses to open a database
 created by a newer one, and asks you to upgrade.
@@ -443,7 +501,8 @@ created by a newer one, and asks you to upgrade.
 [CAUTION]
 ====
 *The database is not encrypted.* Every stored command is kept in plain text, together with the directories it ran
-in. Anyone who can read your user configuration directory, or a backup of it, can read your command history.
+in. Anyone who can read the directory that holds the database (see `tabby path`), or a backup of it, can read your
+command history.
 ====
 
 [CAUTION]

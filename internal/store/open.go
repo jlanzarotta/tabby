@@ -13,19 +13,34 @@ import (
 
 // Path returns the database path. It uses $XDG_CONFIG_HOME/tabby when
 // XDG_CONFIG_HOME is set to an absolute path, on every platform, and falls
-// back to os.UserConfigDir otherwise. Relative values are ignored, as the
+// back to the platform default otherwise. Relative values are ignored, as the
 // XDG Base Directory Specification requires.
 func Path() (string, error) {
-	dir := os.Getenv("XDG_CONFIG_HOME")
-	if dir == "" || !filepath.IsAbs(dir) {
-		var err error
-		dir, err = os.UserConfigDir()
-		if err != nil {
-			return "", err
-		}
+	dir, err := configDir()
+	if err != nil {
+		return "", err
 	}
 
 	return filepath.Join(dir, "tabby", "tabby.db"), nil
+}
+
+func configDir() (string, error) {
+	if dir := os.Getenv("XDG_CONFIG_HOME"); filepath.IsAbs(dir) {
+		return dir, nil
+	}
+
+	switch runtime.GOOS {
+	case "windows", "darwin", "ios", "plan9":
+		return os.UserConfigDir()
+	}
+
+	// os.UserConfigDir fails on a relative XDG_CONFIG_HOME instead of ignoring it.
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(home, ".config"), nil
 }
 
 func Open() (*sql.DB, error) {
