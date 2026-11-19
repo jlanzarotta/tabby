@@ -231,7 +231,12 @@ func ForgetPicks(db *sql.DB, query string) (int64, error) {
 		return 0, err
 	}
 
-	return result.RowsAffected()
+	forgotten, err := result.RowsAffected()
+	if err != nil || forgotten == 0 {
+		return forgotten, err
+	}
+
+	return forgotten, scrub(db)
 }
 
 // ReadStats returns totals for the commands that List returns.
@@ -350,12 +355,20 @@ func exclusionPatterns(db *sql.DB) ([]string, error) {
 }
 
 func Remove(db *sql.DB, command string) error {
-	_, err := db.Exec(`
+	result, err := db.Exec(`
 		DELETE FROM commands
 		WHERE command = ?
 	`, command)
+	if err != nil {
+		return err
+	}
 
-	return err
+	affected, err := result.RowsAffected()
+	if err != nil || affected == 0 {
+		return err
+	}
+
+	return scrub(db)
 }
 
 func List(db *sql.DB) ([]Command, error) {
@@ -475,7 +488,16 @@ func AddExclusion(db *sql.DB, pattern string) (int, error) {
 		}
 	}
 
-	return len(matched), tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	if len(matched) > 0 {
+		if err := scrub(db); err != nil {
+			return len(matched), err
+		}
+	}
+
+	return len(matched), nil
 }
 
 func RemoveExclusion(db *sql.DB, pattern string) error {

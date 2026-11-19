@@ -440,7 +440,7 @@ Tabby chooses the location in this order:
 |Platform |Default location
 
 |Windows
-|`%AppData%\tabby\tabby.db`
+|`%LocalAppData%\tabby\tabby.db`
 
 |Linux
 |`~/.config/tabby/tabby.db`
@@ -477,11 +477,18 @@ Details:
 * Set the variable before the shell starts using Tabby, for example in your profile. Changing it in a running shell
   switches that shell to the other database from the next command on.
 * The `tabby` directory is created when it does not exist.
+* On Windows, the default is in `%LocalAppData%` rather than `%AppData%`, because `%AppData%` is the roaming part of
+  the user profile. With roaming profiles or folder redirection, files there are copied to a file server.
 
 === Moving an existing database
 
 Tabby does not move the database when the location changes. It creates a new, empty database at the new location
-and leaves the old one where it was. To keep your history:
+and leaves the old one where it was. The one exception is the earlier Windows default, `%AppData%\tabby\tabby.db`.
+When `XDG_CONFIG_HOME` is not set and that database exists but `%LocalAppData%\tabby\tabby.db` does not, Tabby moves
+it to `%LocalAppData%` the next time it opens the database. If another shell has it open at that moment, Tabby keeps
+using it where it is and tries again on the next command.
+
+To keep your history in any other case:
 
 . Run `tabby path` and note the current location.
 . Close every shell that uses Tabby, so that nothing has the database open.
@@ -492,13 +499,26 @@ and leaves the old one where it was. To keep your history:
 
 To go back to the platform default, unset `XDG_CONFIG_HOME` and move the files back the same way.
 
-=== Permissions and upgrades
+=== Permissions
 
 On Linux, the `tabby` directory is created with mode `0700` and the database files with mode `0600`, so
 only you can read them. Tabby also tightens these permissions each time it opens the database, which covers a
 database you moved in by hand. On Windows, Tabby relies on the permissions of the directory that holds the database,
 which is your user profile by default. If you point `XDG_CONFIG_HOME` outside your profile on Windows, make sure
 other users cannot read that directory.
+
+=== Deleted commands
+
+Tabby turns on SQLite's `secure_delete` setting, so deleted rows are overwritten with zeros instead of being left in
+free space in the file. After `tabby remove`, `tabby forget`, or an `exclude add` that deletes something, Tabby also
+rebuilds the database and empties its write-ahead log (`tabby.db-wal`), so that older copies of the deleted commands
+do not remain there either. The first time this version of Tabby opens an existing database, it does the same once, to
+clear commands that were deleted before.
+
+This only covers the database files. Copies of the database in backups, and blocks that the file system or an SSD
+has not reused yet, can still hold deleted commands.
+
+=== Upgrades
 
 The schema is upgraded automatically when a newer Tabby opens the database. An older Tabby refuses to open a database
 created by a newer one, and asks you to upgrade.

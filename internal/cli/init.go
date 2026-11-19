@@ -1,13 +1,15 @@
 package cli
 
 import (
-    "fmt"
-    "os"
-    "time"
 	"database/sql"
-	"tabby/internal/store"
-	"github.com/spf13/cobra"
+	"fmt"
+	"os"
+	"time"
+
 	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+
+	"tabby/internal/store"
 )
 
 type AddCommand struct {
@@ -95,13 +97,16 @@ func Init(version string) error {
 	return root.Execute()
 }
 
+const rootDescription = "Tabby is a fuzzy tab completer for your shell history. It learns the commands you run " +
+	"successfully and brings them back with a few keystrokes and the Tab key."
+
 func newRootCommand(version string) *cobra.Command {
 	cobra.EnableCommandSorting = false
 
 	root := &cobra.Command{
 		Use:               "tabby",
-        Short:             "Fuzzy tab auto completer for successfully run commands",
-	    Long:              color.YellowString(TabbyTitle()) + "\n\n" + "Tabby is fuzzy tab completer for your shell history. It learns the commands you run successfully and brings them back with a few keystrokes and the Tab key.",
+		Short:             "Fuzzy tab autocompleter for successfully run commands",
+		Long:              color.YellowString(TabbyTitle()) + "\n\n" + rootDescription,
 		SilenceErrors:     true,
 		SilenceUsage:      true,
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
