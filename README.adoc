@@ -14,7 +14,7 @@ image:https://img.shields.io/github/go-mod/go-version/jlanzarotta/tabby[Go Versi
 :imagesdir: assets
 :source-highlighter: rouge
 
-Fuzzy tab completion for the commands you actually use.
+Fuzzy tab completion for the commands that actually succeed.
 
 Tabby learns the commands you run successfully and brings them back with a few keystrokes and the Tab key. Type a
 short query such as `gco`, press Tab, and Tabby expands it to the best matching command, for example
