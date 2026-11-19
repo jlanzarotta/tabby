@@ -21,6 +21,8 @@ short query such as `gco`, press Tab, and Tabby expands it to the best matching 
 `git checkout main`. Press Tab again to cycle through the other matches. When nothing matches, normal shell completion
 takes over.
 
+Inspired by the work done by Waradu at https://github.com/Waradu/tabbr.
+
 == Features
 
 * Fuzzy matching on word starts, so `pcu` finds `podman compose up -d`.
