@@ -17,9 +17,6 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
 
-release:
-  prerelease: auto
-
 builds:
   - main:
       ./cmd/tabby
@@ -32,6 +29,8 @@ builds:
       - windows
     goarch:
       - amd64
+    ldflags:
+      -s -w -X tabby/internal/cli.BuildDateTime={{.Date}} -X tabby/internal/cli.BuildVersion={{.Version}}
 
 archives:
   - formats: [ 'tar.gz' ]
