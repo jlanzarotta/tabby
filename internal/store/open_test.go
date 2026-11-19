@@ -2,11 +2,15 @@ package store
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/pressly/goose/v3"
 )
 
 func setHome(t *testing.T) string {
@@ -16,58 +20,185 @@ func setHome(t *testing.T) string {
 	t.Setenv("USERPROFILE", home)
 	t.Setenv("AppData", filepath.Join(home, "AppData", "Roaming"))
 	t.Setenv("LocalAppData", filepath.Join(home, "AppData", "Local"))
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("XDG_DATA_HOME", "")
 	return home
 }
 
-func TestPathUsesAbsoluteXDGConfigHome(t *testing.T) {
+// openTemp opens a new database in its own XDG_DATA_HOME.
+func openTemp(t *testing.T) (*sql.DB, string) {
+	t.Helper()
 	setHome(t)
-	config := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", config)
-
-	path, err := Path()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := filepath.Join(config, "tabby", "tabby.db"); path != want {
-		t.Fatalf("Path() = %q, want %q", path, want)
-	}
-}
-
-func TestPathIgnoresRelativeXDGConfigHome(t *testing.T) {
-	home := setHome(t)
-	t.Setenv("XDG_CONFIG_HOME", "")
-	want, err := Path()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, value := range []string{".config", "~/.config", "relative/dir"} {
-		t.Setenv("XDG_CONFIG_HOME", value)
-		path, err := Path()
-		if err != nil {
-			t.Fatalf("XDG_CONFIG_HOME=%q: %v", value, err)
-		}
-		if path != want {
-			t.Fatalf("XDG_CONFIG_HOME=%q: Path() = %q, want %q", value, path, want)
-		}
-	}
-
-	if runtime.GOOS == "linux" {
-		if linux := filepath.Join(home, ".config", "tabby", "tabby.db"); want != linux {
-			t.Fatalf("Path() = %q, want %q", want, linux)
-		}
-	}
-}
-
-func TestDeletedCommandsDoNotRemainOnDisk(t *testing.T) {
-	setHome(t)
-	config := t.TempDir()
-	t.Setenv("XDG_CONFIG_HOME", config)
+	data := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", data)
 
 	db, err := Open()
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = db.Close() })
+
+	return db, filepath.Join(data, "tabby", "tabby.db")
+}
+
+// assertNotOnDisk fails when the database at path or its log contains text.
+func assertNotOnDisk(t *testing.T, path, text string) {
+	t.Helper()
+	for _, file := range []string{path, path + "-wal"} {
+		data, err := os.ReadFile(file)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(data, []byte(text)) {
+			t.Fatalf("%s contains %q", file, text)
+		}
+	}
+}
+
+func TestPathUsesAbsoluteXDGDataHome(t *testing.T) {
+	setHome(t)
+	data := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", data)
+
+	path, err := Path()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(data, "tabby", "tabby.db"); path != want {
+		t.Fatalf("Path() = %q, want %q", path, want)
+	}
+}
+
+func TestPathIgnoresRelativeXDGDataHome(t *testing.T) {
+	home := setHome(t)
+	want, err := Path()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, value := range []string{".local/share", "~/.local/share", "relative/dir"} {
+		t.Setenv("XDG_DATA_HOME", value)
+		path, err := Path()
+		if err != nil {
+			t.Fatalf("XDG_DATA_HOME=%q: %v", value, err)
+		}
+		if path != want {
+			t.Fatalf("XDG_DATA_HOME=%q: Path() = %q, want %q", value, path, want)
+		}
+	}
+
+	if runtime.GOOS == "linux" {
+		if linux := filepath.Join(home, ".local", "share", "tabby", "tabby.db"); want != linux {
+			t.Fatalf("Path() = %q, want %q", want, linux)
+		}
+	}
+}
+
+// createLegacy creates a database at dir/tabby/tabby.db that holds command.
+func createLegacy(t *testing.T, dir, command string) string {
+	t.Helper()
+	t.Setenv("XDG_DATA_HOME", dir)
+	db, err := Open()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Add(db, command, Location{}, "", ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("XDG_DATA_HOME", "")
+
+	return filepath.Join(dir, "tabby", "tabby.db")
+}
+
+// assertMoved opens the database and checks that it was moved from legacy to
+// want and still holds command.
+func assertMoved(t *testing.T, legacy, want, command string) {
+	t.Helper()
+	if path, err := Path(); err != nil || path != legacy {
+		t.Fatalf("Path() before the move = %q, %v, want %q", path, err, legacy)
+	}
+
+	db, err := Open()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	if path, err := Path(); err != nil || path != want {
+		t.Fatalf("Path() after the move = %q, %v, want %q", path, err, want)
+	}
+	if exists(legacy) {
+		t.Fatalf("%s was not moved", legacy)
+	}
+
+	commands, err := List(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(commands) != 1 || commands[0].Text != command {
+		t.Fatalf("List() = %+v, want %q", commands, command)
+	}
+}
+
+func TestOpenMovesDatabaseFromXDGConfigHome(t *testing.T) {
+	setHome(t)
+	config := t.TempDir()
+	legacy := createLegacy(t, config, "echo from config")
+
+	data := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", config)
+	t.Setenv("XDG_DATA_HOME", data)
+
+	assertMoved(t, legacy, filepath.Join(data, "tabby", "tabby.db"), "echo from config")
+}
+
+func TestOpenMovesDatabaseFromDotConfig(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("~/.config was only the default on Linux")
+	}
+
+	home := setHome(t)
+	legacy := createLegacy(t, filepath.Join(home, ".config"), "echo from dot config")
+
+	assertMoved(t, legacy, filepath.Join(home, ".local", "share", "tabby", "tabby.db"), "echo from dot config")
+}
+
+func TestOpenMovesDatabaseFromRoamingProfile(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("the roaming profile only exists on Windows")
+	}
+
+	home := setHome(t)
+	legacy := createLegacy(t, filepath.Join(home, "AppData", "Roaming"), "echo from roaming")
+
+	assertMoved(t, legacy, filepath.Join(home, "AppData", "Local", "tabby", "tabby.db"), "echo from roaming")
+}
+
+func TestOpenKeepsExistingDatabaseOverLegacy(t *testing.T) {
+	setHome(t)
+	config := t.TempDir()
+	legacy := createLegacy(t, config, "echo old")
+	data := t.TempDir()
+	current := createLegacy(t, data, "echo new")
+
+	t.Setenv("XDG_CONFIG_HOME", config)
+	t.Setenv("XDG_DATA_HOME", data)
+	if path, err := Path(); err != nil || path != current {
+		t.Fatalf("Path() = %q, %v, want %q", path, err, current)
+	}
+	if !exists(legacy) {
+		t.Fatalf("%s was removed", legacy)
+	}
+}
+
+func TestDeletedCommandsDoNotRemainOnDisk(t *testing.T) {
+	db, path := openTemp(t)
 
 	const marker = "zqxjvmarker"
 	for _, command := range []string{"echo " + marker + " one", "echo " + marker + " two"} {
@@ -88,19 +219,120 @@ func TestDeletedCommandsDoNotRemainOnDisk(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	path := filepath.Join(config, "tabby", "tabby.db")
-	for _, file := range []string{path, path + "-wal"} {
-		data, err := os.ReadFile(file)
-		if os.IsNotExist(err) {
-			continue
-		}
-		if err != nil {
+	assertNotOnDisk(t, path, marker)
+}
+
+func TestDirectoriesAndQueriesAreNotStoredInPlainText(t *testing.T) {
+	db, path := openTemp(t)
+
+	root := filepath.Join(t.TempDir(), "acmeclientrepo")
+	location := Location{Dir: filepath.Join(root, "src"), Root: root}
+	if err := Add(db, "make build", location, "zqxjvquery", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	usages, err := ListLocal(db, location)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(usages) != 1 || !usages[0].SameDir {
+		t.Fatalf("ListLocal() = %+v, want one usage in the same directory", usages)
+	}
+
+	other, err := ListLocal(db, Location{Dir: filepath.Join(root, "docs"), Root: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(other) != 1 || other[0].SameDir {
+		t.Fatalf("ListLocal() elsewhere in the repository = %+v, want one usage in another directory", other)
+	}
+
+	picks, err := ListPicks(db, "ZQXJVQUERY ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(picks) != 1 || picks[0].Command != "make build" {
+		t.Fatalf("ListPicks() = %+v, want make build", picks)
+	}
+
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	assertNotOnDisk(t, path, "acmeclientrepo")
+	assertNotOnDisk(t, path, "zqxjvquery")
+}
+
+func TestMigrationHashesStoredValues(t *testing.T) {
+	setHome(t)
+	path := filepath.Join(t.TempDir(), "tabby.db")
+	db, err := sql.Open("sqlite", path+pragmas)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+
+	files, err := fs.Sub(migrationFiles, "migrations")
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider, err := goose.NewProvider(goose.DialectSQLite3, db, files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := provider.UpTo(context.Background(), 7); err != nil {
+		t.Fatal(err)
+	}
+
+	root := filepath.Join(t.TempDir(), "acmeclientrepo")
+	for _, insert := range []struct {
+		query string
+		args  []any
+	}{
+		{`INSERT INTO commands (command, use_count, last_used_at) VALUES ('make build', 1, unixepoch())`, nil},
+		{`INSERT INTO command_dirs (command, dir, root, use_count, last_used_at) VALUES ('make build', ?, ?, 1, unixepoch())`,
+			[]any{root, root}},
+		{`INSERT INTO command_dirs (command, dir, root, use_count, last_used_at) VALUES ('make build', ?, '', 1, unixepoch())`,
+			[]any{filepath.Join(t.TempDir(), "plain")}},
+		{`INSERT INTO picks (query, command, use_count, last_used_at) VALUES ('mak', 'make build', 1, unixepoch())`, nil},
+	} {
+		if _, err := db.Exec(insert.query, insert.args...); err != nil {
 			t.Fatal(err)
 		}
-		if bytes.Contains(data, []byte(marker)) {
-			t.Fatalf("%s still contains a deleted command", file)
-		}
 	}
+
+	if err := migrate(db); err != nil {
+		t.Fatal(err)
+	}
+
+	usages, err := ListLocal(db, Location{Dir: root, Root: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(usages) != 1 || !usages[0].SameDir {
+		t.Fatalf("ListLocal() = %+v, want one usage in the same directory", usages)
+	}
+
+	var emptyRoots int
+	if err := db.QueryRow(`SELECT count(*) FROM command_dirs WHERE root = ''`).Scan(&emptyRoots); err != nil {
+		t.Fatal(err)
+	}
+	if emptyRoots != 1 {
+		t.Fatalf("%d rows without a repository, want 1", emptyRoots)
+	}
+
+	picks, err := ListPicks(db, "mak")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(picks) != 1 {
+		t.Fatalf("ListPicks() = %+v, want one pick", picks)
+	}
+
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	assertNotOnDisk(t, path, "acmeclientrepo")
 }
 
 func TestMoveDatabase(t *testing.T) {
@@ -176,38 +408,31 @@ func TestMoveDatabaseFailsWhileInUse(t *testing.T) {
 	}
 }
 
-func TestPathMovesOutOfRoamingProfile(t *testing.T) {
-	if runtime.GOOS != "windows" {
-		t.Skip("the roaming profile only exists on Windows")
-	}
-
-	home := setHome(t)
-	t.Setenv("XDG_CONFIG_HOME", "")
-	legacy := filepath.Join(home, "AppData", "Roaming", "tabby", "tabby.db")
-	want := filepath.Join(home, "AppData", "Local", "tabby", "tabby.db")
-	if err := os.MkdirAll(filepath.Dir(legacy), 0700); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(legacy, nil, 0600); err != nil {
+func TestCopyFile(t *testing.T) {
+	dir := t.TempDir()
+	from := filepath.Join(dir, "from")
+	to := filepath.Join(dir, "to")
+	if err := os.WriteFile(from, []byte("contents"), 0600); err != nil {
 		t.Fatal(err)
 	}
 
-	if path, err := Path(); err != nil || path != legacy {
-		t.Fatalf("Path() = %q, %v, want %q", path, err, legacy)
+	if err := copyFile(from, to); err != nil {
+		t.Fatal(err)
 	}
 
-	db, err := Open()
+	data, err := os.ReadFile(to)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.Close(); err != nil {
-		t.Fatal(err)
+	if string(data) != "contents" {
+		t.Fatalf("copied %q, want %q", data, "contents")
 	}
 
-	if path, err := Path(); err != nil || path != want {
-		t.Fatalf("Path() = %q, %v, want %q", path, err, want)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if exists(legacy) {
-		t.Fatalf("%s was not moved", legacy)
+	if len(entries) != 2 {
+		t.Fatalf("%d files in %s, want 2", len(entries), dir)
 	}
 }

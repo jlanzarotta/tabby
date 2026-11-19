@@ -16,11 +16,11 @@ import (
 // the command was picked as a completion of query. A non-empty previous
 // records that the command followed previous, if previous is stored.
 func Add(db *sql.DB, command string, location Location, query string, previous string) error {
+	command = strings.TrimSpace(command)
+
 	if strings.IndexFunc(command, unicode.IsControl) >= 0 {
 		return nil
 	}
-
-	command = strings.TrimSpace(command)
 
 	if isTabbyInvocation(command) {
 		return nil
@@ -44,6 +44,11 @@ func Add(db *sql.DB, command string, location Location, query string, previous s
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	hash, err := hasher(tx)
+	if err != nil {
+		return err
+	}
+
 	now := time.Now().Unix()
 	_, err = tx.Exec(`
 		INSERT INTO commands (command, use_count, last_used_at)
@@ -64,7 +69,7 @@ func Add(db *sql.DB, command string, location Location, query string, previous s
 				root = excluded.root,
 				use_count = use_count + 1,
 				last_used_at = excluded.last_used_at
-		`, command, location.Dir, location.Root, now)
+		`, command, hash(location.Dir), hash(location.Root), now)
 		if err != nil {
 			return err
 		}
@@ -77,7 +82,7 @@ func Add(db *sql.DB, command string, location Location, query string, previous s
 			ON CONFLICT(query, command) DO UPDATE SET
 				use_count = use_count + 1,
 				last_used_at = excluded.last_used_at
-		`, query, command, now)
+		`, hash(query), command, now)
 		if err != nil {
 			return err
 		}
@@ -109,32 +114,32 @@ func Add(db *sql.DB, command string, location Location, query string, previous s
 func prune(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		DELETE FROM commands
-		WHERE pinned = 0 AND last_used_at <= unixepoch('now', '-1 month')
-	`)
+		WHERE pinned = 0 AND last_used_at <= @cutoff
+	`, cutoff())
 	if err != nil {
 		return err
 	}
 
 	_, err = tx.Exec(`
 		DELETE FROM command_dirs
-		WHERE last_used_at <= unixepoch('now', '-1 month')
-	`)
+		WHERE last_used_at <= @cutoff
+	`, cutoff())
 	if err != nil {
 		return err
 	}
 
 	_, err = tx.Exec(`
 		DELETE FROM picks
-		WHERE last_used_at <= unixepoch('now', '-1 month')
-	`)
+		WHERE last_used_at <= @cutoff
+	`, cutoff())
 	if err != nil {
 		return err
 	}
 
 	_, err = tx.Exec(`
 		DELETE FROM transitions
-		WHERE last_used_at <= unixepoch('now', '-1 month')
-	`)
+		WHERE last_used_at <= @cutoff
+	`, cutoff())
 
 	return err
 }
@@ -150,10 +155,10 @@ func ListNext(db *sql.DB, previous string) ([]Transition, error) {
 		SELECT t.use_count, t.last_used_at, c.command, c.use_count, c.last_used_at, c.pinned
 		FROM transitions t
 		JOIN commands c ON c.command = t.command
-		WHERE t.previous = ?
-			AND t.last_used_at > unixepoch('now', '-1 month')
-			AND (c.pinned <> 0 OR c.last_used_at > unixepoch('now', '-1 month'))
-	`, previous)
+		WHERE t.previous = @previous
+			AND t.last_used_at > @cutoff
+			AND (c.pinned <> 0 OR c.last_used_at > @cutoff)
+	`, sql.Named("previous", previous), cutoff())
 	if err != nil {
 		return nil, err
 	}
@@ -193,10 +198,15 @@ func ListPicks(db *sql.DB, query string) ([]Pick, error) {
 		return nil, nil
 	}
 
+	hash, err := hasher(db)
+	if err != nil {
+		return nil, err
+	}
+
 	rows, err := db.Query(`
 		SELECT command, use_count, last_used_at FROM picks
-		WHERE query = ? AND last_used_at > unixepoch('now', '-1 month')
-	`, query)
+		WHERE query = @query AND last_used_at > @cutoff
+	`, sql.Named("query", hash(query)), cutoff())
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +235,11 @@ func ForgetPicks(db *sql.DB, query string) (int64, error) {
 	if query = NormalizeQuery(query); query == "" {
 		result, err = db.Exec(`DELETE FROM picks`)
 	} else {
-		result, err = db.Exec(`DELETE FROM picks WHERE query = ?`, query)
+		var hash func(string) string
+		if hash, err = hasher(db); err != nil {
+			return 0, err
+		}
+		result, err = db.Exec(`DELETE FROM picks WHERE query = ?`, hash(query))
 	}
 	if err != nil {
 		return 0, err
@@ -247,11 +261,11 @@ func ReadStats(db *sql.DB) (Stats, error) {
 			count(*),
 			coalesce(sum(pinned <> 0), 0),
 			coalesce(sum(use_count), 0),
-			(SELECT count(*) FROM picks WHERE last_used_at > unixepoch('now', '-1 month')),
-			(SELECT count(*) FROM transitions WHERE last_used_at > unixepoch('now', '-1 month'))
+			(SELECT count(*) FROM picks WHERE last_used_at > @cutoff),
+			(SELECT count(*) FROM transitions WHERE last_used_at > @cutoff)
 		FROM commands
-		WHERE pinned <> 0 OR last_used_at > unixepoch('now', '-1 month')
-	`).Scan(&stats.Commands, &stats.Pinned, &stats.Runs, &stats.Picks, &stats.Transitions)
+		WHERE pinned <> 0 OR last_used_at > @cutoff
+	`, cutoff()).Scan(&stats.Commands, &stats.Pinned, &stats.Runs, &stats.Picks, &stats.Transitions)
 
 	return stats, err
 }
@@ -354,18 +368,22 @@ func exclusionPatterns(db *sql.DB) ([]string, error) {
 	return patterns, rows.Err()
 }
 
+// Remove deletes command. It returns an error when command is not stored.
 func Remove(db *sql.DB, command string) error {
 	result, err := db.Exec(`
 		DELETE FROM commands
 		WHERE command = ?
-	`, command)
+	`, strings.TrimSpace(command))
 	if err != nil {
 		return err
 	}
 
 	affected, err := result.RowsAffected()
-	if err != nil || affected == 0 {
+	if err != nil {
 		return err
+	}
+	if affected == 0 {
+		return fmt.Errorf("command %q is not stored", command)
 	}
 
 	return scrub(db)
@@ -374,8 +392,8 @@ func Remove(db *sql.DB, command string) error {
 func List(db *sql.DB) ([]Command, error) {
 	rows, err := db.Query(`
 		SELECT command, use_count, last_used_at, pinned FROM commands
-		WHERE pinned <> 0 OR last_used_at > unixepoch('now', '-1 month')
-	`)
+		WHERE pinned <> 0 OR last_used_at > @cutoff
+	`, cutoff())
 	if err != nil {
 		return nil, err
 	}
@@ -408,11 +426,17 @@ func ListLocal(db *sql.DB, location Location) ([]DirUsage, error) {
 		return nil, nil
 	}
 
+	hash, err := hasher(db)
+	if err != nil {
+		return nil, err
+	}
+	dir, root := hash(location.Dir), hash(location.Root)
+
 	rows, err := db.Query(`
 		SELECT command, dir, use_count, last_used_at FROM command_dirs
-		WHERE last_used_at > unixepoch('now', '-1 month')
-			AND (dir = ? OR (? <> '' AND root = ?))
-	`, location.Dir, location.Root, location.Root)
+		WHERE last_used_at > @cutoff
+			AND (dir = @dir OR (@root <> '' AND root = @root))
+	`, cutoff(), sql.Named("dir", dir), sql.Named("root", root))
 	if err != nil {
 		return nil, err
 	}
@@ -422,18 +446,18 @@ func ListLocal(db *sql.DB, location Location) ([]DirUsage, error) {
 
 	for rows.Next() {
 		var usage DirUsage
-		var dir string
+		var usageDir string
 
 		if err := rows.Scan(
 			&usage.Command,
-			&dir,
+			&usageDir,
 			&usage.UseCount,
 			&usage.LastUsed,
 		); err != nil {
 			return nil, err
 		}
 
-		usage.SameDir = dir == location.Dir
+		usage.SameDir = usageDir == dir
 		usages = append(usages, usage)
 	}
 

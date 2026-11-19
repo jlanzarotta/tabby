@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -19,11 +20,11 @@ import (
 const pragmas = "?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)" +
 	"&_pragma=secure_delete(1)&_pragma=temp_store(2)"
 
-// Path returns the database path. It uses $XDG_CONFIG_HOME/tabby when
-// XDG_CONFIG_HOME is set to an absolute path, on every platform, and falls
-// back to the platform default otherwise. Relative values are ignored, as the
-// XDG Base Directory Specification requires. On Windows, it returns the old
-// roaming location while a database there has not been moved yet.
+// Path returns the database path. It uses $XDG_DATA_HOME/tabby when
+// XDG_DATA_HOME is set to an absolute path, on every platform, and falls back
+// to the platform default otherwise. Relative values are ignored, as the XDG
+// Base Directory Specification requires. While a database in a location that
+// an earlier version used has not been moved yet, it returns that location.
 func Path() (string, error) {
 	path, err := defaultPath()
 	if err != nil {
@@ -38,7 +39,7 @@ func Path() (string, error) {
 }
 
 func defaultPath() (string, error) {
-	dir, err := baseDir()
+	dir, err := dataDir()
 	if err != nil {
 		return "", err
 	}
@@ -46,8 +47,8 @@ func defaultPath() (string, error) {
 	return filepath.Join(dir, "tabby", "tabby.db"), nil
 }
 
-func baseDir() (string, error) {
-	if dir := xdgConfigHome(); dir != "" {
+func dataDir() (string, error) {
+	if dir := absoluteEnv("XDG_DATA_HOME"); dir != "" {
 		return dir, nil
 	}
 
@@ -57,41 +58,60 @@ func baseDir() (string, error) {
 		return os.UserCacheDir()
 	}
 
-	// os.UserConfigDir fails on a relative XDG_CONFIG_HOME instead of ignoring it.
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(home, ".config"), nil
+	return filepath.Join(home, ".local", "share"), nil
 }
 
-func xdgConfigHome() string {
-	if dir := os.Getenv("XDG_CONFIG_HOME"); filepath.IsAbs(dir) {
+func absoluteEnv(name string) string {
+	if dir := os.Getenv(name); filepath.IsAbs(dir) {
 		return dir
 	}
 
 	return ""
 }
 
-// legacyPath returns the database under %AppData% when it exists and path does
-// not, and "" otherwise.
+// legacyPaths returns the database paths that earlier versions used, in the
+// order they took precedence.
+func legacyPaths() []string {
+	var dirs []string
+	if dir := absoluteEnv("XDG_CONFIG_HOME"); dir != "" {
+		dirs = append(dirs, dir)
+	}
+
+	if runtime.GOOS == "windows" {
+		if dir := os.Getenv("AppData"); dir != "" {
+			dirs = append(dirs, dir)
+		}
+	} else if home, err := os.UserHomeDir(); err == nil {
+		dirs = append(dirs, filepath.Join(home, ".config"))
+	}
+
+	paths := make([]string, len(dirs))
+	for i, dir := range dirs {
+		paths[i] = filepath.Join(dir, "tabby", "tabby.db")
+	}
+
+	return paths
+}
+
+// legacyPath returns the first database in a location that an earlier version
+// used when path does not exist, and "" otherwise.
 func legacyPath(path string) string {
-	if runtime.GOOS != "windows" || xdgConfigHome() != "" {
+	if exists(path) {
 		return ""
 	}
 
-	appData := os.Getenv("AppData")
-	if appData == "" {
-		return ""
+	for _, legacy := range legacyPaths() {
+		if legacy != path && exists(legacy) {
+			return legacy
+		}
 	}
 
-	legacy := filepath.Join(appData, "tabby", "tabby.db")
-	if exists(path) || !exists(legacy) {
-		return ""
-	}
-
-	return legacy
+	return ""
 }
 
 func exists(path string) bool {
@@ -171,13 +191,50 @@ func moveDatabase(from, to string) error {
 	}
 
 	if err := os.Rename(from, to); err != nil {
-		return err
+		// The locations can be on different file systems, which rename does
+		// not support.
+		if err := copyFile(from, to); err != nil {
+			return err
+		}
+		if err := os.Remove(from); err != nil {
+			_ = os.Remove(to)
+			return err
+		}
 	}
 
 	// Only succeeds when the old directory is empty.
 	_ = os.Remove(filepath.Dir(from))
 
 	return nil
+}
+
+// copyFile copies from to to through a temporary file, so that to is either
+// complete or missing.
+func copyFile(from, to string) error {
+	source, err := os.Open(from)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	temp, err := os.CreateTemp(filepath.Dir(to), filepath.Base(to)+".*.tmp")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = os.Remove(temp.Name()) }()
+
+	_, err = io.Copy(temp, source)
+	if err == nil {
+		err = temp.Sync()
+	}
+	if closeErr := temp.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		return err
+	}
+
+	return os.Rename(temp.Name(), to)
 }
 
 // scrub rebuilds the database and empties the write-ahead log, so that deleted

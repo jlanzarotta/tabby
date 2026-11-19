@@ -13,13 +13,18 @@ import (
 //go:embed migrations/*.sql
 var migrationFiles embed.FS
 
+// goMigrations are the migrations that cannot be written in SQL.
+var goMigrations = []*goose.Migration{
+	goose.NewGoMigration(8, &goose.GoFunc{RunTx: hashStoredValues}, nil),
+}
+
 func migrate(db *sql.DB) error {
 	ctx := context.Background()
 	files, err := fs.Sub(migrationFiles, "migrations")
 	if err != nil {
 		return err
 	}
-	provider, err := goose.NewProvider(goose.DialectSQLite3, db, files)
+	provider, err := goose.NewProvider(goose.DialectSQLite3, db, files, goose.WithGoMigrations(goMigrations...))
 	if err != nil {
 		return err
 	}
@@ -35,6 +40,11 @@ func migrate(db *sql.DB) error {
 	if version == latest {
 		return nil
 	}
-	_, err = provider.Up(ctx)
-	return err
+	if _, err = provider.Up(ctx); err != nil {
+		return err
+	}
+
+	// Migrations can delete or rewrite stored values, so the old ones are
+	// cleared from the file afterward.
+	return scrub(db)
 }
