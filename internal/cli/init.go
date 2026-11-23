@@ -97,7 +97,7 @@ var BuildDateTime string
 
 // Init parses the command line and runs the selected command.
 func Init(version string) error {
-	root := newRootCommand(version)
+	root := newRootCommand(buildVersion(version))
 
 	// pflag treats "-version" as a cluster of shorthand flags.
 	args := os.Args[1:]
@@ -124,7 +124,7 @@ func newRootCommand(version string) *cobra.Command {
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if showVersion, _ := cmd.Flags().GetBool("version"); showVersion {
-				runVersion(cmd, args)
+				runVersion(version)
 				return nil
 			}
 			return cmd.Help()
@@ -419,7 +419,17 @@ func newExcludeCommand() *cobra.Command {
 	return exclude
 }
 
-func runVersion(_ *cobra.Command, _ []string) {
+// buildVersion returns the version that the build set in BuildVersion, or
+// fallback when it set none, as with go install.
+func buildVersion(fallback string) string {
+	if BuildVersion != "" {
+		return BuildVersion
+	}
+
+	return fallback
+}
+
+func runVersion(version string) {
 	fmt.Printf("%s\n\nVersion: %s\nBorn on: %s\n"+
 		"------------------------------------------------------------------------------\n"+
 		"BSD 3-Clause License\n\n"+
@@ -451,7 +461,7 @@ func runVersion(_ *cobra.Command, _ []string) {
 		"OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"+
 		"------------------------------------------------------------------------------\n",
 		color.YellowString(TabbyTitle()),
-		BuildVersion,
+		version,
 		BuildDateTime,
 		time.Now().Format("2006"))
 }
