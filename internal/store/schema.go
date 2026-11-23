@@ -45,3 +45,19 @@ type Exclusion struct {
 	Pattern   string
 	CreatedAt int64
 }
+
+// Verdict tells whether a command would be recorded.
+type Verdict struct {
+	// Reason is why the command is not recorded, or "" when it is.
+	Reason string
+	// Exclusions are the exclusion patterns that match the command.
+	Exclusions []string
+}
+
+// PruneResult is what Prune deleted, or would delete.
+type PruneResult struct {
+	// Commands are the deleted commands, oldest first.
+	Commands []Command
+	// Records counts the deleted directory usage, picks, and follow-ups.
+	Records int
+}

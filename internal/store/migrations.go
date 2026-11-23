@@ -18,13 +18,25 @@ var goMigrations = []*goose.Migration{
 	goose.NewGoMigration(8, &goose.GoFunc{RunTx: hashStoredValues}, nil),
 }
 
-func migrate(db *sql.DB) error {
-	ctx := context.Background()
+// newProvider returns the migration provider for db. Creating it does not
+// touch the database.
+func newProvider(db *sql.DB) (*goose.Provider, error) {
 	files, err := fs.Sub(migrationFiles, "migrations")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	provider, err := goose.NewProvider(goose.DialectSQLite3, db, files, goose.WithGoMigrations(goMigrations...))
+
+	return goose.NewProvider(goose.DialectSQLite3, db, files, goose.WithGoMigrations(goMigrations...))
+}
+
+func latestVersion(provider *goose.Provider) int64 {
+	sources := provider.ListSources()
+	return sources[len(sources)-1].Version
+}
+
+func migrate(db *sql.DB) error {
+	ctx := context.Background()
+	provider, err := newProvider(db)
 	if err != nil {
 		return err
 	}
@@ -32,8 +44,7 @@ func migrate(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	sources := provider.ListSources()
-	latest := sources[len(sources)-1].Version
+	latest := latestVersion(provider)
 	if version > latest {
 		return fmt.Errorf("database schema version %d is newer than supported version %d; upgrade Tabby", version, latest)
 	}

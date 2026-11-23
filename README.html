@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.20">
+<meta name="generator" content="Asciidoctor 2.0.26">
 <title>Tabby</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -116,7 +116,6 @@ h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title str
 :not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
 pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
 pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
-pre>code{display:block}
 pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
 em em{font-style:normal}
 strong strong{font-weight:400}
@@ -140,7 +139,7 @@ p a>code:hover{color:rgba(0,0,0,.9)}
 #content::before{content:none}
 #header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
 #header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
-#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header>h1:only-child{border-bottom:1px solid #dddddf;padding-bottom:8px}
 #header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:flex;flex-flow:row wrap}
 #header .details span:first-child{margin-left:-.125em}
 #header .details span.email a{color:rgba(0,0,0,.85)}
@@ -162,6 +161,7 @@ p a>code:hover{color:rgba(0,0,0,.9)}
 #toctitle{color:#7a2518;font-size:1.2em}
 @media screen and (min-width:768px){#toctitle{font-size:1.375em}
 body.toc2{padding-left:15em;padding-right:0}
+body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
 #toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
 #toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
 #toc.toc2>ul{font-size:.9em;margin-bottom:0}
@@ -218,6 +218,7 @@ table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
 .literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class=highlight],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
 .literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
 .listingblock>.content{position:relative}
+.listingblock pre>code{display:block}
 .listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
 .listingblock:hover code[data-lang]::before{display:block}
 .listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
@@ -327,7 +328,7 @@ a.image{text-decoration:none;display:inline-block}
 a.image object{pointer-events:none}
 sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
 sup.footnote a,sup.footnoteref a{text-decoration:none}
-sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
+sup.footnote a:active,sup.footnoteref a:active,#footnotes .footnote a:first-of-type:active{text-decoration:underline}
 #footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
 #footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
 #footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
@@ -432,20 +433,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 #footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
 </head>
 <body class="article">
 <div id="header">
 </div>
 <div id="content">
 <div class="paragraph">
-<p><span class="image"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjIiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0icmVsZWFzZTogbm8gcmVsZWFzZXMgb3IgcmVwbyBub3QgZm91bmQiPjx0aXRsZT5yZWxlYXNlOiBubyByZWxlYXNlcyBvciByZXBvIG5vdCBmb3VuZDwvdGl0bGU+PGZpbHRlciBpZD0iYmx1ciI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTYiLz48L2ZpbHRlcj48bGluZWFyR3JhZGllbnQgaWQ9InMiIHgyPSIwIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYmJiIiBzdG9wLW9wYWNpdHk9Ii4xIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLW9wYWNpdHk9Ii4xIi8+PC9saW5lYXJHcmFkaWVudD48Y2xpcFBhdGggaWQ9InIiPjxyZWN0IHdpZHRoPSIyMjIiIGhlaWdodD0iMjAiIHJ4PSIzIi8+PC9jbGlwUGF0aD48ZyBjbGlwLXBhdGg9InVybCgjcikiPjxyZWN0IHdpZHRoPSI0OSIgaGVpZ2h0PSIyMCIgZmlsbD0iIzU1NSIvPjxyZWN0IHg9IjQ5IiB3aWR0aD0iMTczIiBoZWlnaHQ9IjIwIiBmaWxsPSIjZGQ0MzQzIi8+PHJlY3Qgd2lkdGg9IjIyMiIgaGVpZ2h0PSIyMCIgZmlsbD0idXJsKCNzKSIvPjwvZz48ZyBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iVmVyZGFuYSxHZW5ldmEsRGVqYVZ1IFNhbnMsc2Fucy1zZXJpZiIgdGV4dC1yZW5kZXJpbmc9Imdlb21ldHJpY1ByZWNpc2lvbiIgZm9udC1zaXplPSIxMTAiPjxnIHRyYW5zZm9ybT0ic2NhbGUoLjEpIj48ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgZmlsbD0iIzAxMDEwMSI+PHRleHQgeD0iMjU1IiB5PSIxNTAiIGZpbGwtb3BhY2l0eT0iLjgiIGZpbHRlcj0idXJsKCNibHVyKSIgdGV4dExlbmd0aD0iMzkwIj5yZWxlYXNlPC90ZXh0Pjx0ZXh0IHg9IjI1NSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii4zIiB0ZXh0TGVuZ3RoPSIzOTAiPnJlbGVhc2U8L3RleHQ+PC9nPjx0ZXh0IHg9IjI1NSIgeT0iMTQwIiB0ZXh0TGVuZ3RoPSIzOTAiPnJlbGVhc2U8L3RleHQ+PC9nPjxnIHRyYW5zZm9ybT0ic2NhbGUoLjEpIj48ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgZmlsbD0iIzAxMDEwMSI+PHRleHQgeD0iMTM0NSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii44IiBmaWx0ZXI9InVybCgjYmx1cikiIHRleHRMZW5ndGg9IjE2MzAiPm5vIHJlbGVhc2VzIG9yIHJlcG8gbm90IGZvdW5kPC90ZXh0Pjx0ZXh0IHg9IjEzNDUiIHk9IjE1MCIgZmlsbC1vcGFjaXR5PSIuMyIgdGV4dExlbmd0aD0iMTYzMCI+bm8gcmVsZWFzZXMgb3IgcmVwbyBub3QgZm91bmQ8L3RleHQ+PC9nPjx0ZXh0IHg9IjEzNDUiIHk9IjE0MCIgdGV4dExlbmd0aD0iMTYzMCI+bm8gcmVsZWFzZXMgb3IgcmVwbyBub3QgZm91bmQ8L3RleHQ+PC9nPjwvZz48L3N2Zz4=" alt="GitHub Release"></span>
-<span class="image"><a class="image" href="https://opensource.org/license/BSD-3-clause"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMzYiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iTGljZW5zZTogQlNEIDMgQ2xhdXNlIj48dGl0bGU+TGljZW5zZTogQlNEIDMgQ2xhdXNlPC90aXRsZT48ZmlsdGVyIGlkPSJibHVyIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIxNiIvPjwvZmlsdGVyPjxsaW5lYXJHcmFkaWVudCBpZD0icyIgeDI9IjAiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiYmIiIHN0b3Atb3BhY2l0eT0iLjEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3Atb3BhY2l0eT0iLjEiLz48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aCBpZD0iciI+PHJlY3Qgd2lkdGg9IjEzNiIgaGVpZ2h0PSIyMCIgcng9IjMiLz48L2NsaXBQYXRoPjxnIGNsaXAtcGF0aD0idXJsKCNyKSI+PHJlY3Qgd2lkdGg9IjUxIiBoZWlnaHQ9IjIwIiBmaWxsPSIjNTU1Ii8+PHJlY3QgeD0iNTEiIHdpZHRoPSI4NSIgaGVpZ2h0PSIyMCIgZmlsbD0iIzAwN2VjNiIvPjxyZWN0IHdpZHRoPSIxMzYiIGhlaWdodD0iMjAiIGZpbGw9InVybCgjcykiLz48L2c+PGcgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlZlcmRhbmEsR2VuZXZhLERlamFWdSBTYW5zLHNhbnMtc2VyaWYiIHRleHQtcmVuZGVyaW5nPSJnZW9tZXRyaWNQcmVjaXNpb24iIGZvbnQtc2l6ZT0iMTEwIj48ZyB0cmFuc2Zvcm09InNjYWxlKC4xKSI+PGcgYXJpYS1oaWRkZW49InRydWUiIGZpbGw9IiMwMTAxMDEiPjx0ZXh0IHg9IjI2NSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii44IiBmaWx0ZXI9InVybCgjYmx1cikiIHRleHRMZW5ndGg9IjQxMCI+TGljZW5zZTwvdGV4dD48dGV4dCB4PSIyNjUiIHk9IjE1MCIgZmlsbC1vcGFjaXR5PSIuMyIgdGV4dExlbmd0aD0iNDEwIj5MaWNlbnNlPC90ZXh0PjwvZz48dGV4dCB4PSIyNjUiIHk9IjE0MCIgdGV4dExlbmd0aD0iNDEwIj5MaWNlbnNlPC90ZXh0PjwvZz48ZyB0cmFuc2Zvcm09InNjYWxlKC4xKSI+PGcgYXJpYS1oaWRkZW49InRydWUiIGZpbGw9IiMwMTAxMDEiPjx0ZXh0IHg9IjkyNSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii44IiBmaWx0ZXI9InVybCgjYmx1cikiIHRleHRMZW5ndGg9Ijc1MCI+QlNEIDMgQ2xhdXNlPC90ZXh0Pjx0ZXh0IHg9IjkyNSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii4zIiB0ZXh0TGVuZ3RoPSI3NTAiPkJTRCAzIENsYXVzZTwvdGV4dD48L2c+PHRleHQgeD0iOTI1IiB5PSIxNDAiIHRleHRMZW5ndGg9Ijc1MCI+QlNEIDMgQ2xhdXNlPC90ZXh0PjwvZz48L2c+PC9zdmc+" alt="License BSD 3 Clause blue"></a></span>
+<p><span class="image"><img src="https://img.shields.io/github/v/release/jlanzarotta/tabby" alt="GitHub Release"></span>
+<span class="image"><a class="image" href="https://opensource.org/license/BSD-3-clause"><img src="https://img.shields.io/badge/License-BSD_3_Clause-blue.svg" alt="License BSD 3 Clause blue"></a></span>
 <span class="image"><a class="image" href="https://github.com/jlanzarotta/tabby/actions/workflows/go.yml"><img src="https://github.com/jlanzarotta/tabby/actions/workflows/go.yml/badge.svg" alt="badge"></a></span>
-<span class="image"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iZG93bmxvYWRzOiByZXBvIG5vdCBmb3VuZCI+PHRpdGxlPmRvd25sb2FkczogcmVwbyBub3QgZm91bmQ8L3RpdGxlPjxmaWx0ZXIgaWQ9ImJsdXIiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjE2Ii8+PC9maWx0ZXI+PGxpbmVhckdyYWRpZW50IGlkPSJzIiB4Mj0iMCIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2JiYiIgc3RvcC1vcGFjaXR5PSIuMSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1vcGFjaXR5PSIuMSIvPjwvbGluZWFyR3JhZGllbnQ+PGNsaXBQYXRoIGlkPSJyIj48cmVjdCB3aWR0aD0iMTYwIiBoZWlnaHQ9IjIwIiByeD0iMyIvPjwvY2xpcFBhdGg+PGcgY2xpcC1wYXRoPSJ1cmwoI3IpIj48cmVjdCB3aWR0aD0iNjkiIGhlaWdodD0iMjAiIGZpbGw9IiM1NTUiLz48cmVjdCB4PSI2OSIgd2lkdGg9IjkxIiBoZWlnaHQ9IjIwIiBmaWxsPSIjZGQ0MzQzIi8+PHJlY3Qgd2lkdGg9IjE2MCIgaGVpZ2h0PSIyMCIgZmlsbD0idXJsKCNzKSIvPjwvZz48ZyBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iVmVyZGFuYSxHZW5ldmEsRGVqYVZ1IFNhbnMsc2Fucy1zZXJpZiIgdGV4dC1yZW5kZXJpbmc9Imdlb21ldHJpY1ByZWNpc2lvbiIgZm9udC1zaXplPSIxMTAiPjxnIHRyYW5zZm9ybT0ic2NhbGUoLjEpIj48ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgZmlsbD0iIzAxMDEwMSI+PHRleHQgeD0iMzU1IiB5PSIxNTAiIGZpbGwtb3BhY2l0eT0iLjgiIGZpbHRlcj0idXJsKCNibHVyKSIgdGV4dExlbmd0aD0iNTkwIj5kb3dubG9hZHM8L3RleHQ+PHRleHQgeD0iMzU1IiB5PSIxNTAiIGZpbGwtb3BhY2l0eT0iLjMiIHRleHRMZW5ndGg9IjU5MCI+ZG93bmxvYWRzPC90ZXh0PjwvZz48dGV4dCB4PSIzNTUiIHk9IjE0MCIgdGV4dExlbmd0aD0iNTkwIj5kb3dubG9hZHM8L3RleHQ+PC9nPjxnIHRyYW5zZm9ybT0ic2NhbGUoLjEpIj48ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgZmlsbD0iIzAxMDEwMSI+PHRleHQgeD0iMTEzNSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii44IiBmaWx0ZXI9InVybCgjYmx1cikiIHRleHRMZW5ndGg9IjgxMCI+cmVwbyBub3QgZm91bmQ8L3RleHQ+PHRleHQgeD0iMTEzNSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii4zIiB0ZXh0TGVuZ3RoPSI4MTAiPnJlcG8gbm90IGZvdW5kPC90ZXh0PjwvZz48dGV4dCB4PSIxMTM1IiB5PSIxNDAiIHRleHRMZW5ndGg9IjgxMCI+cmVwbyBub3QgZm91bmQ8L3RleHQ+PC9nPjwvZz48L3N2Zz4=" alt="GitHub Downloads (all assets" width="all releases)"></span>
-<span class="image"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMzAiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iR286IHJlcG8gbm90IGZvdW5kLCBicmFuY2ggbm90IGZvdW5kLCBvciBnby5tb2QgbWlzc2luZyI+PHRpdGxlPkdvOiByZXBvIG5vdCBmb3VuZCwgYnJhbmNoIG5vdCBmb3VuZCwgb3IgZ28ubW9kIG1pc3Npbmc8L3RpdGxlPjxmaWx0ZXIgaWQ9ImJsdXIiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjE2Ii8+PC9maWx0ZXI+PGxpbmVhckdyYWRpZW50IGlkPSJzIiB4Mj0iMCIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2JiYiIgc3RvcC1vcGFjaXR5PSIuMSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1vcGFjaXR5PSIuMSIvPjwvbGluZWFyR3JhZGllbnQ+PGNsaXBQYXRoIGlkPSJyIj48cmVjdCB3aWR0aD0iMzMwIiBoZWlnaHQ9IjIwIiByeD0iMyIvPjwvY2xpcFBhdGg+PGcgY2xpcC1wYXRoPSJ1cmwoI3IpIj48cmVjdCB3aWR0aD0iMjUiIGhlaWdodD0iMjAiIGZpbGw9IiM1NTUiLz48cmVjdCB4PSIyNSIgd2lkdGg9IjMwNSIgaGVpZ2h0PSIyMCIgZmlsbD0iI2RkNDM0MyIvPjxyZWN0IHdpZHRoPSIzMzAiIGhlaWdodD0iMjAiIGZpbGw9InVybCgjcykiLz48L2c+PGcgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlZlcmRhbmEsR2VuZXZhLERlamFWdSBTYW5zLHNhbnMtc2VyaWYiIHRleHQtcmVuZGVyaW5nPSJnZW9tZXRyaWNQcmVjaXNpb24iIGZvbnQtc2l6ZT0iMTEwIj48ZyB0cmFuc2Zvcm09InNjYWxlKC4xKSI+PGcgYXJpYS1oaWRkZW49InRydWUiIGZpbGw9IiMwMTAxMDEiPjx0ZXh0IHg9IjEzNSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii44IiBmaWx0ZXI9InVybCgjYmx1cikiIHRleHRMZW5ndGg9IjE1MCI+R288L3RleHQ+PHRleHQgeD0iMTM1IiB5PSIxNTAiIGZpbGwtb3BhY2l0eT0iLjMiIHRleHRMZW5ndGg9IjE1MCI+R288L3RleHQ+PC9nPjx0ZXh0IHg9IjEzNSIgeT0iMTQwIiB0ZXh0TGVuZ3RoPSIxNTAiPkdvPC90ZXh0PjwvZz48ZyB0cmFuc2Zvcm09InNjYWxlKC4xKSI+PGcgYXJpYS1oaWRkZW49InRydWUiIGZpbGw9IiMwMTAxMDEiPjx0ZXh0IHg9IjE3NjUiIHk9IjE1MCIgZmlsbC1vcGFjaXR5PSIuOCIgZmlsdGVyPSJ1cmwoI2JsdXIpIiB0ZXh0TGVuZ3RoPSIyOTUwIj5yZXBvIG5vdCBmb3VuZCwgYnJhbmNoIG5vdCBmb3VuZCwgb3IgZ28ubW9kIG1pc3Npbmc8L3RleHQ+PHRleHQgeD0iMTc2NSIgeT0iMTUwIiBmaWxsLW9wYWNpdHk9Ii4zIiB0ZXh0TGVuZ3RoPSIyOTUwIj5yZXBvIG5vdCBmb3VuZCwgYnJhbmNoIG5vdCBmb3VuZCwgb3IgZ28ubW9kIG1pc3Npbmc8L3RleHQ+PC9nPjx0ZXh0IHg9IjE3NjUiIHk9IjE0MCIgdGV4dExlbmd0aD0iMjk1MCI+cmVwbyBub3QgZm91bmQsIGJyYW5jaCBub3QgZm91bmQsIG9yIGdvLm1vZCBtaXNzaW5nPC90ZXh0PjwvZz48L2c+PC9zdmc+" alt="Go Version"></span></p>
+<span class="image"><img src="https://img.shields.io/github/downloads/jlanzarotta/tabby/total" alt="GitHub Downloads (all assets" width="all releases)"></span>
+<span class="image"><img src="https://img.shields.io/github/go-mod/go-version/jlanzarotta/tabby" alt="Go Version"></span></p>
 </div>
-<h1 id="tabby" class="sect0"><a class="anchor" href="#tabby"></a>Tabby</h1>
+<h1 id="_tabby" class="sect0">Tabby</h1>
 <div class="paragraph">
 <p>Fuzzy tab completion for the commands that actually succeed.</p>
 </div>
@@ -459,7 +459,7 @@ takes over.</p>
 <p>Inspired by the work done by Waradu at <a href="https://github.com/Waradu/tabbr" class="bare">https://github.com/Waradu/tabbr</a>.</p>
 </div>
 <div class="sect1">
-<h2 id="features"><a class="anchor" href="#features"></a>1. Features</h2>
+<h2 id="_features">1. Features</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -506,14 +506,14 @@ same query.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="install"><a class="anchor" href="#install"></a>2. Install</h2>
+<h2 id="_install">2. Install</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>From the repository root:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">go install ./cmd/tabby</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">go install ./cmd/tabby</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -522,21 +522,21 @@ same query.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="shell-setup"><a class="anchor" href="#shell-setup"></a>3. Shell setup</h2>
+<h2 id="_shell_setup">3. Shell setup</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="zsh"><a class="anchor" href="#zsh"></a>3.1. Zsh</h3>
+<h3 id="_zsh">3.1. Zsh</h3>
 <div class="paragraph">
 <p>Add to <code>~/.zshrc</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-zsh hljs" data-lang="zsh">eval "$(tabby init zsh)"</code></pre>
+<pre class="highlight"><code class="language-zsh" data-lang="zsh">eval "$(tabby init zsh)"</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="bash"><a class="anchor" href="#bash"></a>3.2. Bash</h3>
+<h3 id="_bash">3.2. Bash</h3>
 <div class="paragraph">
 <p>Bash 4.4 or newer is required.</p>
 </div>
@@ -545,12 +545,12 @@ same query.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">eval "$(tabby init bash)"</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">eval "$(tabby init bash)"</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="powershell"><a class="anchor" href="#powershell"></a>3.3. PowerShell</h3>
+<h3 id="_powershell">3.3. PowerShell</h3>
 <div class="paragraph">
 <p>PowerShell 5.1 or newer and PSReadLine 2.0 or newer are required. PSReadLine is installed by default.</p>
 </div>
@@ -559,12 +559,12 @@ same query.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-powershell hljs" data-lang="powershell">Invoke-Expression (&amp; { (tabby init powershell | Out-String) })</code></pre>
+<pre class="highlight"><code class="language-powershell" data-lang="powershell">Invoke-Expression (&amp; { (tabby init powershell | Out-String) })</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="key-bindings"><a class="anchor" href="#key-bindings"></a>3.4. Key bindings</h3>
+<h3 id="_key_bindings">3.4. Key bindings</h3>
 <table class="tableblock frame-all grid-all stripes-even stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -599,10 +599,10 @@ falls back to the shell&#8217;s normal completion.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="how-it-works"><a class="anchor" href="#how-it-works"></a>4. How it works</h2>
+<h2 id="_how_it_works">4. How it works</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="recording"><a class="anchor" href="#recording"></a>4.1. Recording</h3>
+<h3 id="_recording">4.1. Recording</h3>
 <div class="paragraph">
 <p>After each command finishes, the shell integration checks its exit status. When the command succeeded, the
 integration runs <code>tabby add</code> in the background. Tabby then stores the command along with:</p>
@@ -616,16 +616,16 @@ integration runs <code>tabby add</code> in the background. Tabby then stores the
 <p>the directory it ran in and the root of the git repository around that directory, if there is one, and</p>
 </li>
 <li>
-<p>the query, when the command was inserted by Tabby and you ran it without changing it. See <a href="#learned-picks">Learned picks</a>.</p>
+<p>the query, when the command was inserted by Tabby and you ran it without changing it. See <a href="#_learned_picks">Learned picks</a>.</p>
 </li>
 <li>
-<p>the command you ran just before it in the same shell, if it was stored. See <a href="#next-command-prediction">Next-command prediction</a>.</p>
+<p>the command you ran just before it in the same shell, if it was stored. See <a href="#_next_command_prediction">Next-command prediction</a>.</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="matching"><a class="anchor" href="#matching"></a>4.2. Matching</h3>
+<h3 id="_matching">4.2. Matching</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -646,9 +646,9 @@ such as <code>./build</code>, <code>~/src</code>, or <code>C:\temp</code> are le
 </div>
 </div>
 <div class="sect2">
-<h3 id="ranking"><a class="anchor" href="#ranking"></a>4.3. Ranking</h3>
+<h3 id="_ranking">4.3. Ranking</h3>
 <div class="paragraph">
-<p>Commands you have picked for the exact same query come first. See <a href="#learned-picks">Learned picks</a>. All other matches are ordered
+<p>Commands you have picked for the exact same query come first. See <a href="#_learned_picks">Learned picks</a>. All other matches are ordered
 by how well the text matches:</p>
 </div>
 <div class="olist arabic">
@@ -731,7 +731,7 @@ weaker match from the current directory. Directory use and pinning decide the or
 </table>
 </div>
 <div class="sect3">
-<h4 id="how-directories-are-compared"><a class="anchor" href="#how-directories-are-compared"></a>4.3.1. How directories are compared</h4>
+<h4 id="_how_directories_are_compared">4.3.1. How directories are compared</h4>
 <div class="ulist">
 <ul>
 <li>
@@ -753,7 +753,7 @@ use the shell.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="learned-picks"><a class="anchor" href="#learned-picks"></a>4.4. Learned picks</h3>
+<h3 id="_learned_picks">4.4. Learned picks</h3>
 <div class="paragraph">
 <p>When you press Tab, cycle to a command, and run it exactly as Tabby inserted it, Tabby remembers that you picked that
 command for that query. The next time you type the same query, the picked command is offered first. This fixes the
@@ -785,7 +785,7 @@ counts, which keeps it first.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="next-command-prediction"><a class="anchor" href="#next-command-prediction"></a>4.5. Next-command prediction</h3>
+<h3 id="_next_command_prediction">4.5. Next-command prediction</h3>
 <div class="paragraph">
 <p>Each shell remembers the last command you ran successfully. When you run the next one, Tabby records that it followed
 the previous one. Press Tab on an empty prompt, and Tabby inserts the command that most often follows the last command
@@ -826,7 +826,7 @@ completion.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="what-is-not-stored"><a class="anchor" href="#what-is-not-stored"></a>4.6. What is not stored</h3>
+<h3 id="_what_is_not_stored">4.6. What is not stored</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -853,58 +853,61 @@ handler skips lines that look like they contain secrets.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="retention"><a class="anchor" href="#retention"></a>4.7. Retention</h3>
+<h3 id="_retention">4.7. Retention</h3>
 <div class="paragraph">
 <p>Commands that have not been used in the last month are deleted, unless they are pinned. Directory usage, learned
 picks, and follow-ups older than a month are deleted too, including for pinned commands. Cleanup runs each time a command is recorded.</p>
+</div>
+<div class="paragraph">
+<p>To delete history sooner, run <code>tabby prune --older-than &lt;age&gt;</code> with a shorter age. See <a href="#_command_history">Command history</a>.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="commands"><a class="anchor" href="#commands"></a>5. Commands</h2>
+<h2 id="_commands">5. Commands</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="shell-integration"><a class="anchor" href="#shell-integration"></a>5.1. Shell integration</h3>
+<h3 id="_shell_integration">5.1. Shell integration</h3>
 <div class="sect3">
-<h4 id="tabby-init-shell"><a class="anchor" href="#tabby-init-shell"></a>5.1.1. <code>tabby init &lt;shell&gt;</code></h4>
+<h4 id="_tabby_init_shell">5.1.1. <code>tabby init &lt;shell&gt;</code></h4>
 <div class="paragraph">
-<p>Print the integration script for <code>zsh</code>, <code>bash</code>, or <code>powershell</code>. See <a href="#shell-setup">Shell setup</a>.</p>
+<p>Print the integration script for <code>zsh</code>, <code>bash</code>, or <code>powershell</code>. See <a href="#_shell_setup">Shell setup</a>.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="command-history"><a class="anchor" href="#command-history"></a>5.2. Command history</h3>
+<h3 id="_command_history">5.2. Command history</h3>
 <div class="sect3">
-<h4 id="tabby-add-command"><a class="anchor" href="#tabby-add-command"></a>5.2.1. <code>tabby add "&lt;command&gt;"</code></h4>
+<h4 id="_tabby_add_command">5.2.1. <code>tabby add "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Record a run of a command, as if it had just finished successfully in the current directory. The same rules apply as
 for automatic recording, so a command that is too short or excluded is silently ignored.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-remove-command"><a class="anchor" href="#tabby-remove-command"></a>5.2.2. <code>tabby remove "&lt;command&gt;"</code></h4>
+<h4 id="_tabby_remove_command">5.2.2. <code>tabby remove "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Delete a stored command, including its directory usage, its learned picks, its follow-ups, and its pin. Leading and
 trailing spaces are ignored. Tabby reports an error when the command is not stored.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-query-query"><a class="anchor" href="#tabby-query-query"></a>5.2.3. <code>tabby query "&lt;query&gt;"</code></h4>
+<h4 id="_tabby_query_query">5.2.3. <code>tabby query "&lt;query&gt;"</code></h4>
 <div class="paragraph">
 <p>Print the matching commands in ranked order, one per line, using the current directory for ranking. The shell
 integration calls this when you press Tab.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-next-command"><a class="anchor" href="#tabby-next-command"></a>5.2.4. <code>tabby next "&lt;command&gt;"</code></h4>
+<h4 id="_tabby_next_command">5.2.4. <code>tabby next "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Print the commands that usually follow a command, most likely first, one per line. At most 50 are printed. The shell
 integration calls this when you press Tab on an empty prompt.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-list"><a class="anchor" href="#tabby-list"></a>5.2.5. <code>tabby list</code></h4>
+<h4 id="_tabby_list">5.2.5. <code>tabby list</code></h4>
 <div class="paragraph">
 <p>List stored commands with their last-used time and score, highest score first. Pinned commands are marked
 <code>[pinned]</code>. The scores shown here do not include directory use.</p>
@@ -929,7 +932,7 @@ integration calls this when you press Tab on an empty prompt.</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="tabby-forget-query"><a class="anchor" href="#tabby-forget-query"></a>5.2.6. <code>tabby forget [query]</code></h4>
+<h4 id="_tabby_forget_query">5.2.6. <code>tabby forget [query]</code></h4>
 <div class="paragraph">
 <p>Forget the commands learned for a query, so that it ranks normally again. Tabby prints how many picks were deleted.</p>
 </div>
@@ -953,7 +956,54 @@ integration calls this when you press Tab on an empty prompt.</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="tabby-stats"><a class="anchor" href="#tabby-stats"></a>5.2.7. <code>tabby stats</code></h4>
+<h4 id="_tabby_prune_older_than_age">5.2.7. <code>tabby prune --older-than &lt;age&gt;</code></h4>
+<div class="paragraph">
+<p>Delete the unpinned commands that were last used longer ago than <code>&lt;age&gt;</code>, together with their directory usage,
+learned picks, and follow-ups. Directory usage, picks, and follow-ups older than <code>&lt;age&gt;</code> are deleted too, including for
+pinned commands. This is the same cleanup that Tabby runs automatically for anything older than a month, but with an
+age you choose. Tabby prints how many commands and other records were deleted.</p>
+</div>
+<div class="paragraph">
+<p><code>&lt;age&gt;</code> is a whole number followed by <code>h</code> for hours, <code>d</code> for days, or <code>w</code> for weeks, for example <code>36h</code>, <code>10d</code>, or
+<code>2w</code>. Months are not supported, because <code>m</code> could also mean minutes. An age of a month or more finds nothing, since
+the automatic cleanup has already deleted it.</p>
+</div>
+<table class="tableblock frame-all grid-all stripes-even stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--older-than &lt;age&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required. Delete what was last used longer ago than this.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--dry-run</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Print what would be deleted, with the commands and the time each was last used, without deleting anything.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>tabby prune --older-than 2w --dry-run
+Would remove 2 command(s) and 5 directory, pick, and follow-up record(s)
+  2026-11-02 08:14 podman build .
+  2026-11-03 17:40 podman push image</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_tabby_stats">5.2.8. <code>tabby stats</code></h4>
 <div class="paragraph">
 <p>Show a summary of the store, the most used commands, and alias suggestions. The counts cover the last month, plus
 pinned commands.</p>
@@ -1018,7 +1068,7 @@ Alias suggestions:
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-pin-command"><a class="anchor" href="#tabby-pin-command"></a>5.2.8. <code>tabby pin "&lt;command&gt;"</code></h4>
+<h4 id="_tabby_pin_command">5.2.9. <code>tabby pin "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Pin a command so that it never expires. If the command is not stored yet, it is added. Pinning is refused for a
 command that matches an exclusion pattern.</p>
@@ -1029,7 +1079,7 @@ command.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-unpin-command"><a class="anchor" href="#tabby-unpin-command"></a>5.2.9. <code>tabby unpin "&lt;command&gt;"</code></h4>
+<h4 id="_tabby_unpin_command">5.2.10. <code>tabby unpin "&lt;command&gt;"</code></h4>
 <div class="paragraph">
 <p>Unpin a command so that it expires normally again. It is an error to unpin a command that is not pinned.</p>
 </div>
@@ -1048,14 +1098,14 @@ If an unpinned command has not been used in the last month, it is deleted the ne
 </div>
 </div>
 <div class="sect2">
-<h3 id="exclusions"><a class="anchor" href="#exclusions"></a>5.3. Exclusions</h3>
+<h3 id="_exclusions">5.3. Exclusions</h3>
 <div class="paragraph">
 <p>Exclusions are case-insensitive glob patterns, not regular expressions. They support <code><strong></code> (any text), <code>?</code> (any single
 character), and <code>[&#8230;&#8203;]</code> (any character in the set, or not in it when the set starts with <code>^</code>). A pattern must match the whole command, so most patterns start
 and end with <code></strong></code>.</p>
 </div>
 <div class="sect3">
-<h4 id="tabby-exclude-add-pattern"><a class="anchor" href="#tabby-exclude-add-pattern"></a>5.3.1. <code>tabby exclude add "&lt;pattern&gt;"</code></h4>
+<h4 id="_tabby_exclude_add_pattern">5.3.1. <code>tabby exclude add "&lt;pattern&gt;"</code></h4>
 <div class="paragraph">
 <p>Add an exclusion and delete every stored command that matches it, including pinned commands. Tabby prints how many
 commands were deleted.</p>
@@ -1077,23 +1127,64 @@ commands were deleted.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Allow a pattern that matches every command, such as <code>*</code>. Without it, such a pattern is refused, because it would
 delete all history.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--dry-run</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Print the stored commands that the pattern would delete, without adding the pattern or deleting anything. Pinned
+commands are marked <code>[pinned]</code>.</p></td>
+</tr>
 </tbody>
 </table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Run <code>tabby exclude add --dry-run "&lt;pattern&gt;"</code> first. The deletion cannot be undone.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect3">
-<h4 id="tabby-exclude-remove-pattern"><a class="anchor" href="#tabby-exclude-remove-pattern"></a>5.3.2. <code>tabby exclude remove "&lt;pattern&gt;"</code></h4>
+<h4 id="_tabby_exclude_test_command">5.3.2. <code>tabby exclude test "&lt;command&gt;"</code></h4>
+<div class="paragraph">
+<p>Show whether a command would be recorded when it succeeds, and if not, why. Leading and trailing spaces are ignored.
+When exclusions keep the command out, every matching pattern is listed, so you can see which one to remove.</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>tabby exclude test "gh auth login --token=abc"
+"gh auth login --token=abc" is not recorded, because it matches an exclusion pattern
+  *--token*
+  *-token*
+  *token=*</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The check covers the rules in Tabby itself: length, <code>tabby</code> commands, control characters, and exclusions. It does not
+cover the rules of the shell integration, such as a leading space or the PSReadLine <code>AddToHistoryHandler</code>. See
+<a href="#_what_is_not_stored">What is not stored</a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_tabby_exclude_remove_pattern">5.3.3. <code>tabby exclude remove "&lt;pattern&gt;"</code></h4>
 <div class="paragraph">
 <p>Remove an exclusion. Commands it kept out in the past are not restored.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-exclude-list"><a class="anchor" href="#tabby-exclude-list"></a>5.3.3. <code>tabby exclude list</code></h4>
+<h4 id="_tabby_exclude_list">5.3.4. <code>tabby exclude list</code></h4>
 <div class="paragraph">
 <p>List the exclusion patterns with the time each was added, newest first.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="built-in-exclusions"><a class="anchor" href="#built-in-exclusions"></a>5.3.4. Built-in exclusions</h4>
+<h4 id="_built_in_exclusions">5.3.5. Built-in exclusions</h4>
 <div class="paragraph">
 <p>The built-in exclusions cover:</p>
 </div>
@@ -1139,23 +1230,75 @@ options for MySQL and MariaDB</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="other-commands"><a class="anchor" href="#other-commands"></a>5.4. Other commands</h3>
+<h3 id="_other_commands">5.4. Other commands</h3>
 <div class="sect3">
-<h4 id="tabby-path"><a class="anchor" href="#tabby-path"></a>5.4.1. <code>tabby path</code></h4>
+<h4 id="_tabby_doctor">5.4.1. <code>tabby doctor</code></h4>
 <div class="paragraph">
-<p>Print the absolute path to the SQLite database, taking <code>XDG_DATA_HOME</code> into account. Use it to check which
-database Tabby is using. See <a href="#database-location">Database location</a>.</p>
+<p>Check the installation, the database, and the shell integration, and print what was found. Tabby exits with status 1
+when it finds a problem, so the command also works in scripts.</p>
+</div>
+<div class="paragraph">
+<p>It checks that:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>tabby</code> is on your <code>PATH</code>, and that it is the same executable as the one running. When Tabby is installed with
+Scoop, the shim is followed to the real executable. A different executable usually means an older copy, for example
+one from <code>go install</code>, comes first on the <code>PATH</code>.</p>
+</li>
+<li>
+<p>the database can be read, its schema version is supported, and SQLite finds no damage in it (<code>PRAGMA quick_check</code>).</p>
+</li>
+<li>
+<p>the shell integration is loaded in the current shell. It is detected through <code>TABBY_SHELL</code>, which the integration
+sets. See <a href="#_environment_variables">Environment variables</a>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>It also prints the database location and size, the number of stored commands, learned picks, follow-ups, and
+exclusions, and the retention period. In PowerShell, it prints the PSReadLine prediction source. The gray text that
+PSReadLine predictions show after the cursor is easy to mistake for Tabby.</p>
+</div>
+<div class="paragraph">
+<p>The <code>doctor</code> command does not create, move, or upgrade the database. A database that is missing, in an old location,
+or on an older schema is reported, and is taken care of the next time a command is recorded.</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Tabby 2026.1.1
+
+Executable   C:\Users\you\scoop\apps\tabby\current\tabby.exe
+Database     C:\Users\you\AppData\Local\tabby\tabby.db (92.0 KB, log 0 B)
+Schema       version 8 (current)
+Integrity    ok
+Commands     214 stored, 3 pinned
+Learned      12 picks, 87 follow-ups
+Exclusions   71 patterns
+Retention    1 month after last use; pinned commands do not expire
+Shell        powershell
+Prediction   HistoryAndPlugin (PSReadLine)
+
+Notes:
+  - The gray text that PowerShell shows after the cursor comes from PSReadLine prediction, not Tabby, and Right arrow accepts it. To turn it off, run: Set-PSReadLineOption -PredictionSource None
+
+No problems found</pre>
+</div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-prepare"><a class="anchor" href="#tabby-prepare"></a>5.4.2. <code>tabby prepare</code></h4>
+<h4 id="_tabby_prepare">5.4.2. <code>tabby prepare</code></h4>
 <div class="paragraph">
 <p>Create the database and apply any pending schema migrations, then exit. Every other command that uses the database
 does this too, so you only need it to set up the database ahead of time.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="tabby-version"><a class="anchor" href="#tabby-version"></a>5.4.3. <code>tabby --version</code></h4>
+<h4 id="_tabby_version">5.4.3. <code>tabby --version</code></h4>
 <div class="paragraph">
 <p>Print the version, build date, and license. <code>tabby -version</code> also works.</p>
 </div>
@@ -1164,7 +1307,7 @@ does this too, so you only need it to set up the database ahead of time.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="environment-variables"><a class="anchor" href="#environment-variables"></a>6. Environment variables</h2>
+<h2 id="_environment_variables">6. Environment variables</h2>
 <div class="sectionbody">
 <table class="tableblock frame-all grid-all stripes-even stretch">
 <colgroup>
@@ -1181,18 +1324,29 @@ does this too, so you only need it to set up the database ahead of time.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>XDG_DATA_HOME</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">When set to an absolute path, the database is stored in <code>$XDG_DATA_HOME/tabby</code>, on every platform, including
-Windows. Empty and relative values are ignored. See <a href="#database-location">Database location</a>.</p></td>
+Windows. Empty and relative values are ignored. See <a href="#_database_location">Database location</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>XDG_CONFIG_HOME</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No longer used for the location. A database in <code>$XDG_CONFIG_HOME/tabby</code> from an earlier version is moved
-automatically. See <a href="#moving-an-existing-database">Moving an existing database</a>.</p></td>
+automatically. See <a href="#_moving_an_existing_database">Moving an existing database</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>TABBY_DIR</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The directory to use for directory-aware ranking. When it is not set, Tabby uses its working directory. The
 PowerShell integration sets it, because <code>Set-Location</code> does not change the working directory of the PowerShell
 process. The Zsh integration sets it to the directory the command started in.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>TABBY_SHELL</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set by the shell integration to <code>zsh</code>, <code>bash</code>, or <code>powershell</code>, so that <code>tabby doctor</code> can tell whether the
+integration is loaded. A shell started from one with the integration inherits the value, even when it does not load
+the integration itself.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>TABBY_PREDICTION</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set by the PowerShell integration at each prompt to the PSReadLine prediction source, for <code>tabby doctor</code>. It is empty
+with PSReadLine 2.0, which has no prediction.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>TABBY_QUERY</code></p></td>
@@ -1213,13 +1367,13 @@ the environment instead.</p></td>
 </div>
 </div>
 <div class="sect1">
-<h2 id="storage"><a class="anchor" href="#storage"></a>7. Storage</h2>
+<h2 id="_storage">7. Storage</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The database is a single SQLite file named <code>tabby.db</code>. Run <code>tabby path</code> to see where it is.</p>
+<p>The database is a single SQLite file named <code>tabby.db</code>. Run <code>tabby doctor</code> to see where it is.</p>
 </div>
 <div class="sect2">
-<h3 id="database-location"><a class="anchor" href="#database-location"></a>7.1. Database location</h3>
+<h3 id="_database_location">7.1. Database location</h3>
 <div class="paragraph">
 <p>Tabby chooses the location in this order:</p>
 </div>
@@ -1267,13 +1421,13 @@ copied to a file server.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># Zsh or Bash, in ~/.zshrc or ~/.bashrc
+<pre class="highlight"><code class="language-sh" data-lang="sh"># Zsh or Bash, in ~/.zshrc or ~/.bashrc
 export XDG_DATA_HOME="$HOME/.local/share"</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-powershell hljs" data-lang="powershell"># PowerShell, in your profile
+<pre class="highlight"><code class="language-powershell" data-lang="powershell"># PowerShell, in your profile
 $env:XDG_DATA_HOME = "$HOME\.local\share"</code></pre>
 </div>
 </div>
@@ -1318,7 +1472,7 @@ switches that shell to the other database from the next command on.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="moving-an-existing-database"><a class="anchor" href="#moving-an-existing-database"></a>7.2. Moving an existing database</h3>
+<h3 id="_moving_an_existing_database">7.2. Moving an existing database</h3>
 <div class="paragraph">
 <p>Earlier versions of Tabby kept the database in other places. When there is no database at the location above, Tabby
 looks for one in these places, in this order, and moves the first one it finds:</p>
@@ -1346,7 +1500,7 @@ location and leaves the old one where it was. To keep your history when you chan
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Run <code>tabby path</code> and note the current location.</p>
+<p>Run <code>tabby doctor</code> and note the current location.</p>
 </li>
 <li>
 <p>Close every shell that uses Tabby, so that nothing has the database open.</p>
@@ -1359,7 +1513,7 @@ location and leaves the old one where it was. To keep your history when you chan
 <code>tabby.db-shm</code> if they exist.</p>
 </li>
 <li>
-<p>Open a new shell and run <code>tabby path</code> to confirm the new location.</p>
+<p>Open a new shell and run <code>tabby doctor</code> to confirm the new location.</p>
 </li>
 </ol>
 </div>
@@ -1368,7 +1522,7 @@ location and leaves the old one where it was. To keep your history when you chan
 </div>
 </div>
 <div class="sect2">
-<h3 id="permissions"><a class="anchor" href="#permissions"></a>7.3. Permissions</h3>
+<h3 id="_permissions">7.3. Permissions</h3>
 <div class="paragraph">
 <p>On Linux, the <code>tabby</code> directory is created with mode <code>0700</code> and the database files with mode <code>0600</code>, so
 only you can read them. Tabby also tightens these permissions each time it opens the database, which covers a
@@ -1378,10 +1532,10 @@ other users cannot read that directory.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="deleted-commands"><a class="anchor" href="#deleted-commands"></a>7.4. Deleted commands</h3>
+<h3 id="_deleted_commands">7.4. Deleted commands</h3>
 <div class="paragraph">
 <p>Tabby turns on SQLite&#8217;s <code>secure_delete</code> setting, so deleted rows are overwritten with zeros instead of being left in
-free space in the file. After <code>tabby remove</code>, <code>tabby forget</code>, or an <code>exclude add</code> that deletes something, Tabby also
+free space in the file. After <code>tabby remove</code>, <code>tabby forget</code>, <code>tabby prune</code>, or an <code>exclude add</code> that deletes something, Tabby also
 rebuilds the database and empties its write-ahead log (<code>tabby.db-wal</code>), so that older copies of the deleted commands
 do not remain there either. The first time this version of Tabby opens an existing database, it does the same once, to
 clear commands that were deleted before.</p>
@@ -1392,7 +1546,7 @@ has not reused yet, can still hold deleted commands.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="upgrades"><a class="anchor" href="#upgrades"></a>7.5. Upgrades</h3>
+<h3 id="_upgrades">7.5. Upgrades</h3>
 <div class="paragraph">
 <p>The schema is upgraded automatically when a newer Tabby opens the database. An older Tabby refuses to open a database
 created by a newer one, and asks you to upgrade.</p>
@@ -1401,7 +1555,7 @@ created by a newer one, and asks you to upgrade.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="cautions"><a class="anchor" href="#cautions"></a>8. Cautions</h2>
+<h2 id="_cautions">8. Cautions</h2>
 <div class="sectionbody">
 <div class="admonitionblock caution">
 <table>
@@ -1412,7 +1566,7 @@ created by a newer one, and asks you to upgrade.</p>
 <td class="content">
 <div class="paragraph">
 <p><strong>The database is not encrypted.</strong> Every stored command is kept in plain text, together with the directories it ran
-in. Anyone who can read the directory that holds the database (see <code>tabby path</code>), or a backup of it, can read your
+in. Anyone who can read the directory that holds the database (see <code>tabby doctor</code>), or a backup of it, can read your
 command history.</p>
 </div>
 </td>
@@ -1459,7 +1613,8 @@ In Bash, this only works when <code>HISTCONTROL</code> includes <code>ignorespac
 <td class="content">
 <div class="paragraph">
 <p><strong>Exclusions delete history.</strong> Adding an exclusion permanently deletes every stored command it matches, including
-pinned commands. Removing the exclusion later does not bring them back.</p>
+pinned commands. Removing the exclusion later does not bring them back. Use <code>--dry-run</code> to see what a pattern
+matches before you add it.</p>
 </div>
 </td>
 </tr>
@@ -1533,7 +1688,7 @@ completions instead of listing them.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="license"><a class="anchor" href="#license"></a>9. License</h2>
+<h2 id="_license">9. License</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Tabby is licensed under the BSD 3-Clause License. See <a href="LICENSE">LICENSE</a>.</p>
@@ -1543,15 +1698,8 @@ completions instead of listing them.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-11-19 13:42:27 -0500
+Last updated 2026-11-23 10:39:32
 </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
-<script>
-if (!hljs.initHighlighting.called) {
-  hljs.initHighlighting.called = true
-  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
-}
-</script>
 </body>
 </html>

@@ -50,8 +50,6 @@ type UnpinCommand struct {
 	Command string
 }
 
-type PathCommand struct{}
-
 type PrepareCommand struct{}
 
 type QueryCommand struct {
@@ -66,6 +64,20 @@ type InitCommand struct {
 type ExcludeAddCommand struct {
 	Pattern string
 	Force   bool
+	DryRun  bool
+}
+
+type ExcludeTestCommand struct {
+	Command string
+}
+
+type PruneCommand struct {
+	OlderThan string
+	DryRun    bool
+}
+
+type DoctorCommand struct {
+	Version string
 }
 
 type ExcludeRemoveCommand struct {
@@ -128,8 +140,9 @@ func newRootCommand(version string) *cobra.Command {
 		newPinCommand(),
 		newUnpinCommand(),
 		newForgetCommand(),
+		newPruneCommand(),
 		newStatsCommand(),
-		newPathCommand(),
+		newDoctorCommand(version),
 		newPrepareCommand(),
 		newQueryCommand(),
 		newNextCommand(),
@@ -270,6 +283,35 @@ func newStatsCommand() *cobra.Command {
 	return command
 }
 
+func newPruneCommand() *cobra.Command {
+	var cmd PruneCommand
+	command := &cobra.Command{
+		Use:   "prune",
+		Short: "Delete commands that have not been used recently",
+		Args:  cobra.NoArgs,
+		RunE: withDB(func(app *App, _ []string) error {
+			return cmd.Run(app)
+		}),
+	}
+	command.Flags().StringVar(&cmd.OlderThan, "older-than", "", "Delete what was last used longer ago than this, such as 36h, 10d, or 2w")
+	command.Flags().BoolVar(&cmd.DryRun, "dry-run", false, "Show what would be deleted without deleting it")
+	_ = command.MarkFlagRequired("older-than")
+
+	return command
+}
+
+func newDoctorCommand(version string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "doctor",
+		Short: "Check the installation, the database, and the shell integration",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			cmd := DoctorCommand{Version: version}
+			return cmd.Run()
+		},
+	}
+}
+
 func newPinCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pin <command>",
@@ -291,18 +333,6 @@ func newUnpinCommand() *cobra.Command {
 			cmd := UnpinCommand{Command: args[0]}
 			return cmd.Run(app)
 		}),
-	}
-}
-
-func newPathCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "path",
-		Short: "Print the database path",
-		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			var cmd PathCommand
-			return cmd.Run()
-		},
 	}
 }
 
@@ -353,6 +383,7 @@ func newExcludeCommand() *cobra.Command {
 		}),
 	}
 	addCommand.Flags().BoolVar(&add.Force, "force", false, "Allow a pattern that matches every command")
+	addCommand.Flags().BoolVar(&add.DryRun, "dry-run", false, "Show the stored commands that would be deleted without adding the pattern")
 
 	exclude.AddCommand(
 		addCommand,
@@ -362,6 +393,15 @@ func newExcludeCommand() *cobra.Command {
 			Args:  cobra.ExactArgs(1),
 			RunE: withDB(func(app *App, args []string) error {
 				cmd := ExcludeRemoveCommand{Pattern: args[0]}
+				return cmd.Run(app)
+			}),
+		},
+		&cobra.Command{
+			Use:   "test <command>",
+			Short: "Show whether a command would be recorded, and why not",
+			Args:  cobra.ExactArgs(1),
+			RunE: withDB(func(app *App, args []string) error {
+				cmd := ExcludeTestCommand{Command: args[0]}
 				return cmd.Run(app)
 			}),
 		},

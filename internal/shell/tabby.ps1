@@ -201,6 +201,20 @@ function global:_tabby_should_record {
 	return "$result" -eq 'MemoryAndFile'
 }
 
+$env:TABBY_SHELL = 'powershell'
+
+# Lets tabby doctor report the prediction source, because the gray inline
+# suggestions of PSReadLine are easy to mistake for Tabby. PSReadLine 2.0
+# has no PredictionSource, which leaves the variable empty.
+function global:_tabby_record_prediction {
+	try {
+		$env:TABBY_PREDICTION = "$((Get-PSReadLineOption).PredictionSource)"
+	} catch {
+		$env:TABBY_PREDICTION = ''
+	}
+}
+
+_tabby_record_prediction
 _tabby_reset
 $lastHistory = Get-History -Count 1 -ErrorAction SilentlyContinue
 $global:_tabby_last_history_id = if ($null -eq $lastHistory) { -1 } else { $lastHistory.Id }
@@ -218,6 +232,7 @@ if (-not $global:_tabby_prompt_installed) {
 		$succeeded = $?
 		$savedExitCode = $global:LASTEXITCODE
 		_tabby_record_prompt $succeeded
+		_tabby_record_prediction
 		$global:LASTEXITCODE = $savedExitCode
 		& $global:_tabby_original_prompt
 	}

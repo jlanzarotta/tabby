@@ -79,6 +79,8 @@ _tabby_record_prompt() {
 	return 0
 }
 
+export TABBY_SHELL=bash
+
 complete -I -F _tabby_complete -o bashdefault -o default
 complete -E -F _tabby_complete -o bashdefault -o default
 bind '"\C-i": menu-complete'

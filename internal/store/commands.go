@@ -18,23 +18,11 @@ import (
 func Add(db *sql.DB, command string, location Location, query string, previous string) error {
 	command = strings.TrimSpace(command)
 
-	if strings.IndexFunc(command, unicode.IsControl) >= 0 {
-		return nil
-	}
-
-	if isTabbyInvocation(command) {
-		return nil
-	}
-
-	if utf8.RuneCountInString(command) <= 5 {
-		return nil
-	}
-
-	patterns, err := exclusionPatterns(db)
+	verdict, err := Check(db, command)
 	if err != nil {
 		return err
 	}
-	if matchesAny(patterns, command) {
+	if verdict.Reason != "" {
 		return nil
 	}
 
@@ -102,20 +90,45 @@ func Add(db *sql.DB, command string, location Location, query string, previous s
 		}
 	}
 
-	if err := prune(tx); err != nil {
+	if err := prune(tx, cutoff()); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-// prune deletes rows that List and ListLocal no longer return so that they
-// do not remain on disk indefinitely. Pinned commands are kept.
-func prune(tx *sql.Tx) error {
+// Check reports whether Add would record command, and if not, why.
+func Check(db *sql.DB, command string) (Verdict, error) {
+	command = strings.TrimSpace(command)
+
+	switch {
+	case strings.IndexFunc(command, unicode.IsControl) >= 0:
+		return Verdict{Reason: "it contains control characters"}, nil
+	case isTabbyInvocation(command):
+		return Verdict{Reason: "it runs tabby itself"}, nil
+	case utf8.RuneCountInString(command) <= 5:
+		return Verdict{Reason: "it is five characters or fewer"}, nil
+	}
+
+	patterns, err := exclusionPatterns(db)
+	if err != nil {
+		return Verdict{}, err
+	}
+	if matched := matchingPatterns(patterns, command); len(matched) > 0 {
+		return Verdict{Reason: "it matches an exclusion pattern", Exclusions: matched}, nil
+	}
+
+	return Verdict{}, nil
+}
+
+// prune deletes unpinned commands, directory usage, learned picks, and
+// follow-ups last used at or before the @cutoff parameter. Add calls it with
+// the retention cutoff, so that expired rows do not remain on disk.
+func prune(tx *sql.Tx, cutoff sql.NamedArg) error {
 	_, err := tx.Exec(`
 		DELETE FROM commands
 		WHERE pinned = 0 AND last_used_at <= @cutoff
-	`, cutoff())
+	`, cutoff)
 	if err != nil {
 		return err
 	}
@@ -123,7 +136,7 @@ func prune(tx *sql.Tx) error {
 	_, err = tx.Exec(`
 		DELETE FROM command_dirs
 		WHERE last_used_at <= @cutoff
-	`, cutoff())
+	`, cutoff)
 	if err != nil {
 		return err
 	}
@@ -131,7 +144,7 @@ func prune(tx *sql.Tx) error {
 	_, err = tx.Exec(`
 		DELETE FROM picks
 		WHERE last_used_at <= @cutoff
-	`, cutoff())
+	`, cutoff)
 	if err != nil {
 		return err
 	}
@@ -139,7 +152,7 @@ func prune(tx *sql.Tx) error {
 	_, err = tx.Exec(`
 		DELETE FROM transitions
 		WHERE last_used_at <= @cutoff
-	`, cutoff())
+	`, cutoff)
 
 	return err
 }
@@ -338,14 +351,58 @@ func isTabbyInvocation(command string) bool {
 }
 
 func matchesAny(patterns []string, command string) bool {
+	return len(matchingPatterns(patterns, command)) > 0
+}
+
+// matchingPatterns returns the patterns that match command, ignoring case.
+func matchingPatterns(patterns []string, command string) []string {
 	lowered := strings.ToLower(command)
+
+	var matched []string
 	for _, pattern := range patterns {
 		if glob.Match(strings.ToLower(pattern), lowered) {
-			return true
+			matched = append(matched, pattern)
 		}
 	}
 
-	return false
+	return matched
+}
+
+type querier interface {
+	Query(query string, args ...any) (*sql.Rows, error)
+}
+
+// matchingCommands returns the stored commands that pattern matches, ordered
+// by text.
+func matchingCommands(q querier, pattern string) ([]Command, error) {
+	rows, err := q.Query(`
+		SELECT command, use_count, last_used_at, pinned FROM commands
+		ORDER BY command
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var matched []Command
+	patterns := []string{pattern}
+	for rows.Next() {
+		var command Command
+		if err := rows.Scan(&command.Text, &command.UseCount, &command.LastUsed, &command.Pinned); err != nil {
+			return nil, err
+		}
+		if matchesAny(patterns, command.Text) {
+			matched = append(matched, command)
+		}
+	}
+
+	return matched, rows.Err()
+}
+
+// MatchingCommands returns the stored commands, pinned ones included, that
+// AddExclusion would delete for pattern.
+func MatchingCommands(db *sql.DB, pattern string) ([]Command, error) {
+	return matchingCommands(db, pattern)
 }
 
 func exclusionPatterns(db *sql.DB) ([]string, error) {
@@ -482,32 +539,13 @@ func AddExclusion(db *sql.DB, pattern string) (int, error) {
 		return 0, err
 	}
 
-	rows, err := tx.Query(`SELECT command FROM commands`)
+	matched, err := matchingCommands(tx, pattern)
 	if err != nil {
 		return 0, err
 	}
 
-	var matched []string
-	patterns := []string{pattern}
-	for rows.Next() {
-		var command string
-		if err := rows.Scan(&command); err != nil {
-			_ = rows.Close()
-			return 0, err
-		}
-		if matchesAny(patterns, command) {
-			matched = append(matched, command)
-		}
-	}
-	if err := rows.Close(); err != nil {
-		return 0, err
-	}
-	if err := rows.Err(); err != nil {
-		return 0, err
-	}
-
 	for _, command := range matched {
-		if _, err := tx.Exec(`DELETE FROM commands WHERE command = ?`, command); err != nil {
+		if _, err := tx.Exec(`DELETE FROM commands WHERE command = ?`, command.Text); err != nil {
 			return 0, err
 		}
 	}
@@ -559,4 +597,73 @@ func ListExclusions(db *sql.DB) ([]Exclusion, error) {
 	}
 
 	return exclusions, rows.Err()
+}
+
+// Prune deletes unpinned commands last used at or before before, and the
+// directory usage, learned picks, and follow-ups last used at or before it.
+// With dryRun, it only reports what it would delete.
+func Prune(db *sql.DB, before time.Time, dryRun bool) (PruneResult, error) {
+	var result PruneResult
+
+	tx, err := db.Begin()
+	if err != nil {
+		return result, err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	at := sql.Named("cutoff", before.Unix())
+
+	rows, err := tx.Query(`
+		SELECT command, use_count, last_used_at, pinned FROM commands
+		WHERE pinned = 0 AND last_used_at <= @cutoff
+		ORDER BY last_used_at, command
+	`, at)
+	if err != nil {
+		return result, err
+	}
+	for rows.Next() {
+		var command Command
+		if err := rows.Scan(&command.Text, &command.UseCount, &command.LastUsed, &command.Pinned); err != nil {
+			_ = rows.Close()
+			return result, err
+		}
+		result.Commands = append(result.Commands, command)
+	}
+	if err := rows.Close(); err != nil {
+		return result, err
+	}
+	if err := rows.Err(); err != nil {
+		return result, err
+	}
+
+	// Rows of deleted commands are deleted by ON DELETE CASCADE, so they are
+	// counted whatever their own age.
+	err = tx.QueryRow(`
+		WITH expired AS (
+			SELECT command FROM commands WHERE pinned = 0 AND last_used_at <= @cutoff
+		)
+		SELECT
+			(SELECT count(*) FROM command_dirs
+				WHERE last_used_at <= @cutoff OR command IN expired) +
+			(SELECT count(*) FROM picks
+				WHERE last_used_at <= @cutoff OR command IN expired) +
+			(SELECT count(*) FROM transitions
+				WHERE last_used_at <= @cutoff OR command IN expired OR previous IN expired)
+	`, at).Scan(&result.Records)
+	if err != nil {
+		return result, err
+	}
+
+	if dryRun || len(result.Commands) == 0 && result.Records == 0 {
+		return result, nil
+	}
+
+	if err := prune(tx, at); err != nil {
+		return result, err
+	}
+	if err := tx.Commit(); err != nil {
+		return result, err
+	}
+
+	return result, scrub(db)
 }

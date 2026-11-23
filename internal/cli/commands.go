@@ -2,7 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"math"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -131,16 +133,6 @@ func (cmd *ForgetCommand) Run(app *App) error {
 	return nil
 }
 
-func (cmd *PathCommand) Run() error {
-	path, err := store.Path()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(path)
-	return nil
-}
-
 func (cmd *PrepareCommand) Run() error {
 	return nil
 }
@@ -197,6 +189,17 @@ func looksLikePath(text string) bool {
 }
 
 func (cmd *ExcludeAddCommand) Run(app *App) error {
+	if cmd.DryRun {
+		matched, err := store.MatchingCommands(app.DB, cmd.Pattern)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Would remove %d stored command(s)\n", len(matched))
+		printCommands(matched)
+		return nil
+	}
+
 	if strings.Trim(cmd.Pattern, "*") == "" && !cmd.Force {
 		return fmt.Errorf("pattern %q matches every command and would delete all history; pass --force to add it anyway", cmd.Pattern)
 	}
@@ -208,6 +211,98 @@ func (cmd *ExcludeAddCommand) Run(app *App) error {
 
 	fmt.Printf("Removed %d matching stored command(s)\n", removed)
 	return nil
+}
+
+func (cmd *ExcludeTestCommand) Run(app *App) error {
+	verdict, err := store.Check(app.DB, cmd.Command)
+	if err != nil {
+		return err
+	}
+
+	command := strings.TrimSpace(cmd.Command)
+	if verdict.Reason == "" {
+		fmt.Printf("%q is recorded when it succeeds\n", command)
+		return nil
+	}
+
+	fmt.Printf("%q is not recorded, because %s\n", command, verdict.Reason)
+	style := newStyler()
+	for _, pattern := range verdict.Exclusions {
+		fmt.Printf("  %s\n", style.highlight(pattern))
+	}
+
+	return nil
+}
+
+func (cmd *PruneCommand) Run(app *App) error {
+	age, err := parseAge(cmd.OlderThan)
+	if err != nil {
+		return err
+	}
+
+	result, err := store.Prune(app.DB, time.Now().Add(-age), cmd.DryRun)
+	if err != nil {
+		return err
+	}
+
+	verb := "Removed"
+	if cmd.DryRun {
+		verb = "Would remove"
+	}
+	fmt.Printf(
+		"%s %d command(s) and %d directory, pick, and follow-up record(s)\n",
+		verb, len(result.Commands), result.Records,
+	)
+	if cmd.DryRun {
+		printCommands(result.Commands)
+	}
+
+	return nil
+}
+
+// parseAge parses a whole number of hours, days, or weeks, such as 36h, 10d,
+// or 2w. Months are left out because "m" would be ambiguous with minutes.
+func parseAge(text string) (time.Duration, error) {
+	units := map[byte]time.Duration{'h': time.Hour, 'd': 24 * time.Hour, 'w': 7 * 24 * time.Hour}
+
+	invalid := fmt.Errorf("invalid age %q; use a whole number followed by h, d, or w, such as 36h, 10d, or 2w", text)
+	if len(text) < 2 {
+		return 0, invalid
+	}
+
+	unit, ok := units[text[len(text)-1]]
+	if !ok {
+		return 0, invalid
+	}
+
+	count, err := strconv.Atoi(text[:len(text)-1])
+	if err != nil || count <= 0 || strings.ContainsAny(text[:1], "+-") {
+		return 0, invalid
+	}
+	if time.Duration(count) > math.MaxInt64/unit {
+		return 0, fmt.Errorf("age %q is too large", text)
+	}
+
+	return time.Duration(count) * unit, nil
+}
+
+// printCommands prints commands with their last-used time, marking pinned
+// ones.
+func printCommands(commands []store.Command) {
+	style := newStyler()
+	for _, command := range commands {
+		pin := ""
+		if command.Pinned {
+			pin = " " + style.dim("[pinned]")
+		}
+
+		fmt.Printf(
+			"  %s %s%s\n",
+			style.dim(time.Unix(command.LastUsed, 0).Format("2006-01-02 15:04")),
+			style.highlight(command.Text),
+			pin,
+		)
+	}
 }
 
 func (cmd *ExcludeRemoveCommand) Run(app *App) error {

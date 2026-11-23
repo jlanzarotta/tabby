@@ -1,1 +1,1 @@
-copy ./tabby.exe ${HOME}/bin/.
+copy .\tabby.exe ${HOME}\scoop\apps\tabby\current\.

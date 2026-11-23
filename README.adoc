@@ -220,6 +220,8 @@ To see the predictions without the shell, run `tabby next "<command>"`.
 Commands that have not been used in the last month are deleted, unless they are pinned. Directory usage, learned
 picks, and follow-ups older than a month are deleted too, including for pinned commands. Cleanup runs each time a command is recorded.
 
+To delete history sooner, run `tabby prune --older-than <age>` with a shorter age. See <<Command history>>.
+
 == Commands
 
 === Shell integration
@@ -274,6 +276,37 @@ Forget the commands learned for a query, so that it ranks normally again. Tabby 
 |`--all`
 |Forget the learned picks for every query. It cannot be combined with a query.
 |===
+
+==== `tabby prune --older-than <age>`
+
+Delete the unpinned commands that were last used longer ago than `<age>`, together with their directory usage,
+learned picks, and follow-ups. Directory usage, picks, and follow-ups older than `<age>` are deleted too, including for
+pinned commands. This is the same cleanup that Tabby runs automatically for anything older than a month, but with an
+age you choose. Tabby prints how many commands and other records were deleted.
+
+`<age>` is a whole number followed by `h` for hours, `d` for days, or `w` for weeks, for example `36h`, `10d`, or
+`2w`. Months are not supported, because `m` could also mean minutes. An age of a month or more finds nothing, since
+the automatic cleanup has already deleted it.
+
+[cols="1,3"]
+|===
+|Option |Description
+
+|`--older-than <age>`
+|Required. Delete what was last used longer ago than this.
+
+|`--dry-run`
+|Print what would be deleted, with the commands and the time each was last used, without deleting anything.
+|===
+
+Example:
+
+----
+tabby prune --older-than 2w --dry-run
+Would remove 2 command(s) and 5 directory, pick, and follow-up record(s)
+  2026-11-02 08:14 podman build .
+  2026-11-03 17:40 podman push image
+----
 
 ==== `tabby stats`
 
@@ -354,7 +387,32 @@ commands were deleted.
 |`--force`
 |Allow a pattern that matches every command, such as `*`. Without it, such a pattern is refused, because it would
 delete all history.
+
+|`--dry-run`
+|Print the stored commands that the pattern would delete, without adding the pattern or deleting anything. Pinned
+commands are marked `[pinned]`.
 |===
+
+TIP: Run `tabby exclude add --dry-run "<pattern>"` first. The deletion cannot be undone.
+
+==== `tabby exclude test "<command>"`
+
+Show whether a command would be recorded when it succeeds, and if not, why. Leading and trailing spaces are ignored.
+When exclusions keep the command out, every matching pattern is listed, so you can see which one to remove.
+
+Example:
+
+----
+tabby exclude test "gh auth login --token=abc"
+"gh auth login --token=abc" is not recorded, because it matches an exclusion pattern
+  *--token*
+  *-token*
+  *token=*
+----
+
+The check covers the rules in Tabby itself: length, `tabby` commands, control characters, and exclusions. It does not
+cover the rules of the shell integration, such as a leading space or the PSReadLine `AddToHistoryHandler`. See
+<<What is not stored>>.
 
 ==== `tabby exclude remove "<pattern>"`
 
@@ -385,10 +443,48 @@ Run `tabby exclude list` to see the full set.
 
 === Other commands
 
-==== `tabby path`
+==== `tabby doctor`
 
-Print the absolute path to the SQLite database, taking `XDG_DATA_HOME` into account. Use it to check which
-database Tabby is using. See <<Database location>>.
+Check the installation, the database, and the shell integration, and print what was found. Tabby exits with status 1
+when it finds a problem, so the command also works in scripts.
+
+It checks that:
+
+* `tabby` is on your `PATH`, and that it is the same executable as the one running. When Tabby is installed with
+  Scoop, the shim is followed to the real executable. A different executable usually means an older copy, for example
+  one from `go install`, comes first on the `PATH`.
+* the database can be read, its schema version is supported, and SQLite finds no damage in it (`PRAGMA quick_check`).
+* the shell integration is loaded in the current shell. It is detected through `TABBY_SHELL`, which the integration
+  sets. See <<Environment variables>>.
+
+It also prints the database location and size, the number of stored commands, learned picks, follow-ups, and
+exclusions, and the retention period. In PowerShell, it prints the PSReadLine prediction source. The gray text that
+PSReadLine predictions show after the cursor is easy to mistake for Tabby.
+
+The `doctor` command does not create, move, or upgrade the database. A database that is missing, in an old location,
+or on an older schema is reported, and is taken care of the next time a command is recorded.
+
+Example:
+
+----
+Tabby 2026.1.1
+
+Executable   C:\Users\you\scoop\apps\tabby\current\tabby.exe
+Database     C:\Users\you\AppData\Local\tabby\tabby.db (92.0 KB, log 0 B)
+Schema       version 8 (current)
+Integrity    ok
+Commands     214 stored, 3 pinned
+Learned      12 picks, 87 follow-ups
+Exclusions   71 patterns
+Retention    1 month after last use; pinned commands do not expire
+Shell        powershell
+Prediction   HistoryAndPlugin (PSReadLine)
+
+Notes:
+  - The gray text that PowerShell shows after the cursor comes from PSReadLine prediction, not Tabby, and Right arrow accepts it. To turn it off, run: Set-PSReadLineOption -PredictionSource None
+
+No problems found
+----
 
 ==== `tabby prepare`
 
@@ -418,6 +514,15 @@ automatically. See <<Moving an existing database>>.
 PowerShell integration sets it, because `Set-Location` does not change the working directory of the PowerShell
 process. The Zsh integration sets it to the directory the command started in.
 
+|`TABBY_SHELL`
+|Set by the shell integration to `zsh`, `bash`, or `powershell`, so that `tabby doctor` can tell whether the
+integration is loaded. A shell started from one with the integration inherits the value, even when it does not load
+the integration itself.
+
+|`TABBY_PREDICTION`
+|Set by the PowerShell integration at each prompt to the PSReadLine prediction source, for `tabby doctor`. It is empty
+with PSReadLine 2.0, which has no prediction.
+
 |`TABBY_QUERY`
 |Used by the PowerShell integration to pass the query that a command was picked for, with `--from-env` on `add`.
 
@@ -432,7 +537,7 @@ the environment instead.
 
 == Storage
 
-The database is a single SQLite file named `tabby.db`. Run `tabby path` to see where it is.
+The database is a single SQLite file named `tabby.db`. Run `tabby doctor` to see where it is.
 
 === Database location
 
@@ -507,12 +612,12 @@ empty.
 Otherwise, Tabby does not move the database when the location changes. It creates a new, empty database at the new
 location and leaves the old one where it was. To keep your history when you change `XDG_DATA_HOME`:
 
-. Run `tabby path` and note the current location.
+. Run `tabby doctor` and note the current location.
 . Close every shell that uses Tabby, so that nothing has the database open.
 . Set `XDG_DATA_HOME`.
 . Create the `tabby` directory in `XDG_DATA_HOME`, and move `tabby.db` into it, together with `tabby.db-wal` and
   `tabby.db-shm` if they exist.
-. Open a new shell and run `tabby path` to confirm the new location.
+. Open a new shell and run `tabby doctor` to confirm the new location.
 
 To go back to the platform default, unset `XDG_DATA_HOME` and move the files back the same way.
 
@@ -527,7 +632,7 @@ other users cannot read that directory.
 === Deleted commands
 
 Tabby turns on SQLite's `secure_delete` setting, so deleted rows are overwritten with zeros instead of being left in
-free space in the file. After `tabby remove`, `tabby forget`, or an `exclude add` that deletes something, Tabby also
+free space in the file. After `tabby remove`, `tabby forget`, `tabby prune`, or an `exclude add` that deletes something, Tabby also
 rebuilds the database and empties its write-ahead log (`tabby.db-wal`), so that older copies of the deleted commands
 do not remain there either. The first time this version of Tabby opens an existing database, it does the same once, to
 clear commands that were deleted before.
@@ -545,7 +650,7 @@ created by a newer one, and asks you to upgrade.
 [CAUTION]
 ====
 *The database is not encrypted.* Every stored command is kept in plain text, together with the directories it ran
-in. Anyone who can read the directory that holds the database (see `tabby path`), or a backup of it, can read your
+in. Anyone who can read the directory that holds the database (see `tabby doctor`), or a backup of it, can read your
 command history.
 ====
 
@@ -565,7 +670,8 @@ In Bash, this only works when `HISTCONTROL` includes `ignorespace` or `ignorebot
 [WARNING]
 ====
 *Exclusions delete history.* Adding an exclusion permanently deletes every stored command it matches, including
-pinned commands. Removing the exclusion later does not bring them back.
+pinned commands. Removing the exclusion later does not bring them back. Use `--dry-run` to see what a pattern
+matches before you add it.
 ====
 
 [NOTE]

@@ -111,6 +111,8 @@ if [[ -z "$_tabby_fallback_widget" ]]; then
 	unset _tabby_binding
 fi
 
+export TABBY_SHELL=zsh
+
 zle -N _tabby_complete
 zle -N _tabby_complete_reverse
 bindkey '^I' _tabby_complete
